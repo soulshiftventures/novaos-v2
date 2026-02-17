@@ -31,6 +31,14 @@ from security.audit import log_agent_action
 logger = logging.getLogger(__name__)
 
 
+def safe_datetime_now():
+    """Get current datetime with fallback for timestamp overflow"""
+    try:
+        return safe_datetime_now()
+    except (OSError, OverflowError, ValueError):
+        return datetime(2025, 1, 1, 0, 0, 0)
+
+
 class ContentArbitrage(BaseWorker):
     """
     Fulfills content gigs autonomously (AGGRESSIVE MODE)
@@ -431,16 +439,6 @@ Make it clear, concise, and technically accurate.
         """Save completed work"""
         try:
             from pathlib import Path
-
-
-def safe_datetime_now():
-    """Get current datetime with fallback for timestamp overflow"""
-    try:
-        return datetime.now()
-    except (OSError, OverflowError, ValueError):
-        from datetime import datetime as dt
-        return dt(2025, 1, 1, 0, 0, 0)
-
 
             # Safe datetime for timestamp operations
             try:
