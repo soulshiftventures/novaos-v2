@@ -177,7 +177,7 @@ class BudgetEnforcer:
     def __init__(
         self,
         global_daily_limit: float = 100.0,
-        global_hourly_limit: float = 20.0,
+        global_hourly_limit: float = 50.0,  # Increased from 20 to allow bursts
         per_agent_daily_limit: float = 50.0,
         per_operation_limit: float = 30.0,
         high_cost_threshold: float = 5.0,  # Requires approval

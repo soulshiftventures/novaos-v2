@@ -481,9 +481,14 @@ Cover different use cases and scenarios. Make them immediately valuable."""
             import os
             from pathlib import Path
 
-            # Create products directory
-            products_dir = Path("/Users/krissanders/novaos-v2/data/products")
-            products_dir.mkdir(parents=True, exist_ok=True)
+            # Use relative path for Render deployment, fallback to /tmp
+            products_dir = Path("data/products")
+            try:
+                products_dir.mkdir(parents=True, exist_ok=True)
+            except (PermissionError, OSError):
+                # Fallback to /tmp if we can't create in current dir
+                products_dir = Path("/tmp/products")
+                products_dir.mkdir(parents=True, exist_ok=True)
 
             # Create product file
             filename = f"product_{safe_datetime_now().strftime('%Y%m%d_%H%M%S')}.json"

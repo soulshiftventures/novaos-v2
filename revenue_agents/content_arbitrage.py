@@ -450,8 +450,14 @@ Make it clear, concise, and technically accurate.
                 timestamp_str = '20250101_000000'
                 completed_iso = '2025-01-01T00:00:00'
 
-            fulfillments_dir = Path("/Users/krissanders/novaos-v2/data/fulfillments")
-            fulfillments_dir.mkdir(parents=True, exist_ok=True)
+            # Use relative path for Render deployment, fallback to /tmp
+            fulfillments_dir = Path("data/fulfillments")
+            try:
+                fulfillments_dir.mkdir(parents=True, exist_ok=True)
+            except (PermissionError, OSError):
+                # Fallback to /tmp if we can't create in current dir
+                fulfillments_dir = Path("/tmp/fulfillments")
+                fulfillments_dir.mkdir(parents=True, exist_ok=True)
 
             filename = f"gig_{gig['id']}_{timestamp_str}.txt"
             filepath = fulfillments_dir / filename

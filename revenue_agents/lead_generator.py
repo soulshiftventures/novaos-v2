@@ -469,8 +469,14 @@ Subject line + email body."""
         try:
             from pathlib import Path
 
-            outreach_dir = Path("/Users/krissanders/novaos-v2/data/outreach")
-            outreach_dir.mkdir(parents=True, exist_ok=True)
+            # Use relative path for Render deployment, fallback to /tmp
+            outreach_dir = Path("data/outreach")
+            try:
+                outreach_dir.mkdir(parents=True, exist_ok=True)
+            except (PermissionError, OSError):
+                # Fallback to /tmp if we can't create in current dir
+                outreach_dir = Path("/tmp/outreach")
+                outreach_dir.mkdir(parents=True, exist_ok=True)
 
             filename = f"outreach_{lead['id']}_{safe_datetime_now().strftime('%Y%m%d_%H%M%S')}.txt"
             filepath = outreach_dir / filename
