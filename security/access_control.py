@@ -39,9 +39,9 @@ try:
     from cryptography.hazmat.primitives import hashes
     from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2
     CRYPTO_AVAILABLE = True
-except ImportError:
+except ImportError as e:
     CRYPTO_AVAILABLE = False
-    logger.warning("cryptography package not available - using fallback encryption")
+    logger.warning(f"cryptography package not available - using fallback encryption: {e}")
 
 
 class Permission(Enum):
