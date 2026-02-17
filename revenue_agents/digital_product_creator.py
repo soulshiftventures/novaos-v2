@@ -30,6 +30,14 @@ from security.audit import log_agent_action
 logger = logging.getLogger(__name__)
 
 
+def safe_datetime_now() -> datetime:
+    """Get current datetime with fallback for timestamp overflow"""
+    try:
+        return datetime.now()
+    except (OSError, OverflowError, ValueError):
+        return datetime(2025, 1, 1, 0, 0, 0)
+
+
 class DigitalProductCreator(BaseWorker):
     """
     Creates and sells digital products autonomously (AGGRESSIVE MODE)
@@ -94,7 +102,7 @@ class DigitalProductCreator(BaseWorker):
 
         # Aggressive mode tracking
         self.products_last_hour = 0
-        self.last_hour_reset = datetime.now()
+        self.last_hour_reset = safe_datetime_now()
 
         logger.info(f"Digital Product Creator initialized (AGGRESSIVE MODE)")
         logger.info(f"  Niche: {niche}")
@@ -313,7 +321,7 @@ BE AGGRESSIVE. Find hot opportunities. High demand only (8+)."""
                 'content': content,
                 'price': self._calculate_price(product_type, len(content)),
                 'category': topic['category'],
-                'created_at': datetime.now().isoformat(),
+                'created_at': safe_datetime_now().isoformat(),
                 'creation_cost': 0.50
             }
 
@@ -478,7 +486,7 @@ Cover different use cases and scenarios. Make them immediately valuable."""
             products_dir.mkdir(parents=True, exist_ok=True)
 
             # Create product file
-            filename = f"product_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+            filename = f"product_{safe_datetime_now().strftime('%Y%m%d_%H%M%S')}.json"
             filepath = products_dir / filename
 
             with open(filepath, 'w') as f:

@@ -32,6 +32,14 @@ from security.audit import log_agent_action
 logger = logging.getLogger(__name__)
 
 
+def safe_datetime_now() -> datetime:
+    """Get current datetime with fallback for timestamp overflow"""
+    try:
+        return datetime.now()
+    except (OSError, OverflowError, ValueError):
+        return datetime(2025, 1, 1, 0, 0, 0)
+
+
 class LeadGenerator(BaseWorker):
     """
     Finds and qualifies leads autonomously (AGGRESSIVE MODE)
@@ -100,7 +108,7 @@ class LeadGenerator(BaseWorker):
 
         # Aggressive mode tracking
         self.daily_outreach_count = 0
-        self.last_day_reset = datetime.now()
+        self.last_day_reset = safe_datetime_now()
         self.successful_verticals = {}  # Track winners for auto-scaling
 
         logger.info(f"Lead Generator initialized (AGGRESSIVE MODE)")
@@ -464,14 +472,14 @@ Subject line + email body."""
             outreach_dir = Path("/Users/krissanders/novaos-v2/data/outreach")
             outreach_dir.mkdir(parents=True, exist_ok=True)
 
-            filename = f"outreach_{lead['id']}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.txt"
+            filename = f"outreach_{lead['id']}_{safe_datetime_now().strftime('%Y%m%d_%H%M%S')}.txt"
             filepath = outreach_dir / filename
 
             with open(filepath, 'w') as f:
                 f.write(f"TO: {lead['contact']['email']}\n")
                 f.write(f"COMPANY: {lead['company']}\n")
                 f.write(f"QUALIFIED SCORE: {lead.get('qualification', {}).get('score', 0)}/10\n")
-                f.write(f"SENT: {datetime.now().isoformat()}\n")
+                f.write(f"SENT: {safe_datetime_now().isoformat()}\n")
                 f.write("\n" + "="*80 + "\n\n")
                 f.write(email_content)
 

@@ -432,17 +432,27 @@ Make it clear, concise, and technically accurate.
         try:
             from pathlib import Path
 
+            # Safe datetime for timestamp operations
+            try:
+                now = datetime.now()
+                timestamp_str = now.strftime('%Y%m%d_%H%M%S')
+                completed_iso = now.isoformat()
+            except (OSError, OverflowError, ValueError):
+                # Fallback if datetime.now() fails
+                timestamp_str = '20250101_000000'
+                completed_iso = '2025-01-01T00:00:00'
+
             fulfillments_dir = Path("/Users/krissanders/novaos-v2/data/fulfillments")
             fulfillments_dir.mkdir(parents=True, exist_ok=True)
 
-            filename = f"gig_{gig['id']}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.txt"
+            filename = f"gig_{gig['id']}_{timestamp_str}.txt"
             filepath = fulfillments_dir / filename
 
             with open(filepath, 'w') as f:
                 f.write(f"GIG: {gig['title']}\n")
                 f.write(f"PLATFORM: {gig['platform']}\n")
                 f.write(f"BUDGET: ${gig['budget']}\n")
-                f.write(f"COMPLETED: {datetime.now().isoformat()}\n")
+                f.write(f"COMPLETED: {completed_iso}\n")
                 f.write("\n" + "="*80 + "\n\n")
                 f.write(content)
 
