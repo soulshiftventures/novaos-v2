@@ -1,0 +1,42 @@
+# NovaOS V2 Production Requirements
+
+# Core Framework
+flask==3.0.0
+gunicorn==21.2.0
+
+# Database
+psycopg2-binary==2.9.9
+sqlalchemy==2.0.23
+
+# AI/ML
+anthropic==0.39.0
+chromadb==0.4.22
+
+# Vector Store & Embeddings
+sentence-transformers==2.2.2
+torch==2.1.2
+
+# Telegram Bot
+python-telegram-bot==20.7
+
+# Web Scraping & APIs
+requests==2.31.0
+beautifulsoup4==4.12.2
+
+# Security & Encryption
+cryptography==42.0.0
+python-dotenv==1.0.0
+
+# Monitoring & Logging
+sentry-sdk==1.39.2
+
+# Task Queue (for background jobs)
+celery==5.3.4
+redis==5.0.1
+
+# Email
+sendgrid==6.11.0
+
+# Utilities
+python-dateutil==2.8.2
+pytz==2023.3

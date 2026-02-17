@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agent Map - NovaOS V2</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/">NovaOS V2</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/">Overview</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/agents">Agent Map</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/financial">Financial</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/opportunities">Opportunities</a>
+                    </li>
+                </ul>
+                <span class="navbar-text ms-auto" id="last-update">
+                    Auto-refresh in <span id="countdown">30</span>s
+                </span>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid mt-4">
+        <div class="row">
+            <div class="col-12">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h1>Agent Map</h1>
+                    <div>
+                        <a href="/api/export/agents" class="btn btn-outline-light" download>Export CSV</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Summary Row -->
+        <div class="row mb-4">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="row text-center">
+                            <div class="col">
+                                <h4 id="total-agents">0</h4>
+                                <p class="text-muted mb-0">Total Agents</p>
+                            </div>
+                            <div class="col">
+                                <h4 id="active-count" class="text-success">0</h4>
+                                <p class="text-muted mb-0">Active</p>
+                            </div>
+                            <div class="col">
+                                <h4 id="paused-count" class="text-warning">0</h4>
+                                <p class="text-muted mb-0">Paused</p>
+                            </div>
+                            <div class="col">
+                                <h4 id="killed-count" class="text-danger">0</h4>
+                                <p class="text-muted mb-0">Killed</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Departments Container -->
+        <div id="departments-container">
+            <p class="text-muted">Loading agents...</p>
+        </div>
+
+        <!-- Agent Detail Modal -->
+        <div class="modal fade" id="agentModal" tabindex="-1">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="agentModalLabel">Agent Details</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body" id="agentModalBody">
+                        <p>Loading...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let countdown = 30;
+        let countdownInterval;
+
+        function formatCurrency(value) {
+            return '$' + parseFloat(value).toFixed(2);
+        }
+
+        function getStatusBadge(status) {
+            const statusMap = {
+                'active': 'success',
+                'paused': 'warning',
+                'killed': 'danger'
+            };
+            const color = statusMap[status] || 'secondary';
+            return `<span class="badge bg-${color}">${status}</span>`;
+        }
+
+        function getStatusDot(status) {
+            const colorMap = {
+                'active': 'success',
+                'paused': 'warning',
+                'killed': 'danger'
+            };
+            const color = colorMap[status] || 'secondary';
+            return `<span class="status-dot status-${color}"></span>`;
+        }
+
+        async function loadAgents() {
+            try {
+                const response = await fetch('/api/agents');
+                const data = await response.json();
+
+                // Update summary
+                document.getElementById('total-agents').textContent = data.total_agents;
+
+                let activeCount = 0, pausedCount = 0, killedCount = 0;
+
+                Object.values(data.departments).forEach(agents => {
+                    agents.forEach(agent => {
+                        if (agent.status === 'active') activeCount++;
+                        else if (agent.status === 'paused') pausedCount++;
+                        else if (agent.status === 'killed') killedCount++;
+                    });
+                });
+
+                document.getElementById('active-count').textContent = activeCount;
+                document.getElementById('paused-count').textContent = pausedCount;
+                document.getElementById('killed-count').textContent = killedCount;
+
+                // Render departments
+                const container = document.getElementById('departments-container');
+                container.innerHTML = '';
+
+                // Sort departments (board first)
+                const deptNames = Object.keys(data.departments).sort((a, b) => {
+                    if (a === 'board') return -1;
+                    if (b === 'board') return 1;
+                    return a.localeCompare(b);
+                });
+
+                deptNames.forEach(deptName => {
+                    const agents = data.departments[deptName];
+
+                    const deptCard = document.createElement('div');
+                    deptCard.className = 'card mb-3 department-card';
+                    deptCard.innerHTML = `
+                        <div class="card-header">
+                            <h4 class="mb-0">${deptName.charAt(0).toUpperCase() + deptName.slice(1)}</h4>
+                        </div>
+                        <div class="card-body">
+                            <div class="row" id="dept-${deptName}"></div>
+                        </div>
+                    `;
+                    container.appendChild(deptCard);
+
+                    const agentsContainer = document.getElementById(`dept-${deptName}`);
+
+                    agents.forEach(agent => {
+                        const roi = parseFloat(agent.roi || 0);
+                        const roiClass = roi >= 3 ? 'text-success' : roi >= 1 ? 'text-warning' : 'text-danger';
+
+                        const agentCard = document.createElement('div');
+                        agentCard.className = 'col-md-4 mb-3';
+                        agentCard.innerHTML = `
+                            <div class="card agent-card" onclick="showAgentDetail('${agent.id}')" style="cursor: pointer;">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-start mb-2">
+                                        <h6 class="mb-0">${agent.name}</h6>
+                                        ${getStatusDot(agent.status)}
+                                    </div>
+                                    <p class="text-muted small mb-2">${agent.type}</p>
+                                    <div class="agent-metrics">
+                                        <div class="d-flex justify-content-between">
+                                            <span class="text-muted small">Revenue:</span>
+                                            <span class="small">${formatCurrency(agent.revenue_generated || 0)}</span>
+                                        </div>
+                                        <div class="d-flex justify-content-between">
+                                            <span class="text-muted small">Cost:</span>
+                                            <span class="small">${formatCurrency(agent.total_cost || 0)}</span>
+                                        </div>
+                                        <div class="d-flex justify-content-between">
+                                            <span class="text-muted small">ROI:</span>
+                                            <span class="small ${roiClass}">${(roi * 100).toFixed(0)}%</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                        agentsContainer.appendChild(agentCard);
+                    });
+                });
+
+            } catch (error) {
+                console.error('Error loading agents:', error);
+            }
+        }
+
+        async function showAgentDetail(agentId) {
+            const modal = new bootstrap.Modal(document.getElementById('agentModal'));
+            const modalBody = document.getElementById('agentModalBody');
+            modalBody.innerHTML = '<p>Loading...</p>';
+            modal.show();
+
+            try {
+                const response = await fetch(`/api/agents/${agentId}`);
+                const data = await response.json();
+
+                if (data.error) {
+                    modalBody.innerHTML = `<p class="text-danger">${data.error}</p>`;
+                    return;
+                }
+
+                const agent = data.agent;
+                const roi = parseFloat(agent.roi || 0);
+                const roiClass = roi >= 3 ? 'text-success' : roi >= 1 ? 'text-warning' : 'text-danger';
+
+                let html = `
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <h6>Agent Information</h6>
+                            <table class="table table-sm">
+                                <tr><td>ID:</td><td>${agent.id}</td></tr>
+                                <tr><td>Name:</td><td>${agent.name}</td></tr>
+                                <tr><td>Type:</td><td>${agent.type}</td></tr>
+                                <tr><td>Department:</td><td>${agent.department || 'N/A'}</td></tr>
+                                <tr><td>Status:</td><td>${getStatusBadge(agent.status)}</td></tr>
+                                <tr><td>Deployed:</td><td>${new Date(agent.deployed_at).toLocaleString()}</td></tr>
+                                <tr><td>Last Active:</td><td>${agent.last_active ? new Date(agent.last_active).toLocaleString() : 'Never'}</td></tr>
+                            </table>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>Performance Metrics</h6>
+                            <table class="table table-sm">
+                                <tr><td>Revenue:</td><td class="text-success">${formatCurrency(agent.revenue_generated || 0)}</td></tr>
+                                <tr><td>Cost:</td><td class="text-danger">${formatCurrency(agent.total_cost || 0)}</td></tr>
+                                <tr><td>Profit:</td><td>${formatCurrency((agent.revenue_generated || 0) - (agent.total_cost || 0))}</td></tr>
+                                <tr><td>ROI:</td><td class="${roiClass}">${(roi * 100).toFixed(0)}%</td></tr>
+                                <tr><td>Tokens Used:</td><td>${(agent.tokens_used || 0).toLocaleString()}</td></tr>
+                                <tr><td>Token Budget:</td><td>${agent.token_budget ? agent.token_budget.toLocaleString() : 'Unlimited'}</td></tr>
+                            </table>
+                        </div>
+                    </div>
+                `;
+
+                if (data.recent_costs && data.recent_costs.length > 0) {
+                    html += `
+                        <h6>Recent Costs</h6>
+                        <div class="table-responsive" style="max-height: 200px; overflow-y: auto;">
+                            <table class="table table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>Timestamp</th>
+                                        <th>Operation</th>
+                                        <th>Tokens</th>
+                                        <th>Cost</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                    `;
+
+                    data.recent_costs.forEach(cost => {
+                        html += `
+                            <tr>
+                                <td>${new Date(cost.timestamp).toLocaleString()}</td>
+                                <td>${cost.operation}</td>
+                                <td>${cost.total_tokens}</td>
+                                <td>${formatCurrency(cost.cost)}</td>
+                            </tr>
+                        `;
+                    });
+
+                    html += '</tbody></table></div>';
+                }
+
+                if (data.recent_revenue && data.recent_revenue.length > 0) {
+                    html += `
+                        <h6 class="mt-3">Recent Revenue</h6>
+                        <div class="table-responsive" style="max-height: 200px; overflow-y: auto;">
+                            <table class="table table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>Timestamp</th>
+                                        <th>Amount</th>
+                                        <th>Description</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                    `;
+
+                    data.recent_revenue.forEach(rev => {
+                        html += `
+                            <tr>
+                                <td>${new Date(rev.timestamp).toLocaleString()}</td>
+                                <td>${formatCurrency(rev.amount)}</td>
+                                <td>${rev.description || 'N/A'}</td>
+                            </tr>
+                        `;
+                    });
+
+                    html += '</tbody></table></div>';
+                }
+
+                modalBody.innerHTML = html;
+
+            } catch (error) {
+                console.error('Error loading agent detail:', error);
+                modalBody.innerHTML = '<p class="text-danger">Error loading agent details</p>';
+            }
+        }
+
+        function startCountdown() {
+            countdownInterval = setInterval(() => {
+                countdown--;
+                document.getElementById('countdown').textContent = countdown;
+
+                if (countdown <= 0) {
+                    countdown = 30;
+                    loadAgents();
+                }
+            }, 1000);
+        }
+
+        // Initial load
+        loadAgents();
+        startCountdown();
+    </script>
+</body>
+</html>

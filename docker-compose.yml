@@ -1,0 +1,112 @@
+version: '3.8'
+
+services:
+  # NovaOS Main Application
+  novaos:
+    build: .
+    container_name: novaos-main
+    restart: unless-stopped
+    env_file:
+      - .env
+    volumes:
+      - ./data:/app/data
+      - ./logs:/app/logs
+    ports:
+      - "5001:5001"  # Dashboard
+    networks:
+      - novaos-network
+    command: python cli.py workers start
+
+  # Worker Pool - Sales
+  worker-sales:
+    build: .
+    container_name: novaos-worker-sales
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      - WORKER_DEPARTMENT=sales
+    volumes:
+      - ./data:/app/data
+      - ./logs:/app/logs
+    networks:
+      - novaos-network
+    depends_on:
+      - novaos
+
+  # Worker Pool - Marketing
+  worker-marketing:
+    build: .
+    container_name: novaos-worker-marketing
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      - WORKER_DEPARTMENT=marketing
+    volumes:
+      - ./data:/app/data
+      - ./logs:/app/logs
+    networks:
+      - novaos-network
+    depends_on:
+      - novaos
+
+  # Worker Pool - Product
+  worker-product:
+    build: .
+    container_name: novaos-worker-product
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      - WORKER_DEPARTMENT=product
+    volumes:
+      - ./data:/app/data
+      - ./logs:/app/logs
+    networks:
+      - novaos-network
+    depends_on:
+      - novaos
+
+  # Dashboard
+  dashboard:
+    build: .
+    container_name: novaos-dashboard
+    restart: unless-stopped
+    env_file:
+      - .env
+    volumes:
+      - ./data:/app/data
+    ports:
+      - "5001:5001"
+    networks:
+      - novaos-network
+    command: python cli.py dashboard start
+    depends_on:
+      - novaos
+
+  # Autonomous Engine
+  autonomous:
+    build: .
+    container_name: novaos-autonomous
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      - AUTONOMOUS_ENABLED=true
+    volumes:
+      - ./data:/app/data
+      - ./logs:/app/logs
+    networks:
+      - novaos-network
+    command: python -c "from core.autonomous import get_autonomous_engine; engine = get_autonomous_engine(); engine.enable(); import time; time.sleep(999999)"
+    depends_on:
+      - novaos
+
+networks:
+  novaos-network:
+    driver: bridge
+
+volumes:
+  novaos-data:
+  novaos-logs:

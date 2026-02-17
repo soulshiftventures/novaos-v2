@@ -1,0 +1,131 @@
+# Render.com deployment configuration for NovaOS V2
+
+services:
+  # Web Dashboard
+  - type: web
+    name: novaos-dashboard
+    env: python
+    region: oregon
+    plan: starter  # Free tier
+    buildCommand: "pip install -r requirements-production.txt"
+    startCommand: "gunicorn dashboard.app:app --bind 0.0.0.0:$PORT --workers 2"
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.0
+      - key: ANTHROPIC_API_KEY
+        sync: false  # Set manually in Render dashboard
+      - key: DATABASE_URL
+        fromDatabase:
+          name: novaos-db
+          property: connectionString
+      - key: NOVAOS_SECURITY_LEVEL
+        value: STRICT
+      - key: NOVAOS_MASTER_PASSWORD
+        generateValue: true
+      - key: TELEGRAM_BOT_TOKEN
+        sync: false
+      - key: TELEGRAM_ADMIN_CHAT_ID
+        sync: false
+
+  # Telegram Bot (Background Service)
+  - type: worker
+    name: novaos-telegram-bot
+    env: python
+    region: oregon
+    plan: starter
+    buildCommand: "pip install -r requirements-production.txt"
+    startCommand: "python telegram_bot/bot.py"
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.0
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: DATABASE_URL
+        fromDatabase:
+          name: novaos-db
+          property: connectionString
+      - key: TELEGRAM_BOT_TOKEN
+        sync: false
+      - key: TELEGRAM_ADMIN_CHAT_ID
+        sync: false
+      - key: NOVAOS_SECURITY_LEVEL
+        value: STRICT
+      - key: NOVAOS_MASTER_PASSWORD
+        sync: false
+
+  # Revenue Agent 1: Digital Product Creator
+  - type: worker
+    name: novaos-product-creator
+    env: python
+    region: oregon
+    plan: starter
+    buildCommand: "pip install -r requirements-production.txt"
+    startCommand: "python -c 'from revenue_agents import DigitalProductCreator; agent = DigitalProductCreator(); agent.start(); import time; time.sleep(float(\"inf\"))'"
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.0
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: DATABASE_URL
+        fromDatabase:
+          name: novaos-db
+          property: connectionString
+      - key: GUMROAD_API_KEY
+        sync: false
+      - key: NOVAOS_SECURITY_LEVEL
+        value: STRICT
+      - key: NOVAOS_DAILY_BUDGET
+        value: "50.0"
+
+  # Revenue Agent 2: Content Arbitrage
+  - type: worker
+    name: novaos-content-arbitrage
+    env: python
+    region: oregon
+    plan: starter
+    buildCommand: "pip install -r requirements-production.txt"
+    startCommand: "python -c 'from revenue_agents import ContentArbitrage; agent = ContentArbitrage(); agent.start(); import time; time.sleep(float(\"inf\"))'"
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.0
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: DATABASE_URL
+        fromDatabase:
+          name: novaos-db
+          property: connectionString
+      - key: NOVAOS_SECURITY_LEVEL
+        value: STRICT
+      - key: NOVAOS_DAILY_BUDGET
+        value: "50.0"
+
+  # Revenue Agent 3: Lead Generator
+  - type: worker
+    name: novaos-lead-generator
+    env: python
+    region: oregon
+    plan: starter
+    buildCommand: "pip install -r requirements-production.txt"
+    startCommand: "python -c 'from revenue_agents import LeadGenerator; agent = LeadGenerator(); agent.start(); import time; time.sleep(float(\"inf\"))'"
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.0
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: DATABASE_URL
+        fromDatabase:
+          name: novaos-db
+          property: connectionString
+      - key: SENDGRID_API_KEY
+        sync: false
+      - key: NOVAOS_SECURITY_LEVEL
+        value: STRICT
+      - key: NOVAOS_DAILY_BUDGET
+        value: "50.0"
+
+databases:
+  # PostgreSQL Database
+  - name: novaos-db
+    databaseName: novaos_production
+    user: novaos
+    plan: starter  # Free tier: 1GB storage

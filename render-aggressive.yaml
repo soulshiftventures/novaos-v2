@@ -1,0 +1,404 @@
+# Render.com AGGRESSIVE deployment configuration for NovaOS V2
+# 18 revenue agent instances for 10X operation
+
+services:
+  # Web Dashboard
+  - type: web
+    name: novaos-dashboard
+    env: python
+    region: oregon
+    plan: starter
+    buildCommand: "pip install -r requirements-production.txt"
+    startCommand: "gunicorn dashboard.app:app --bind 0.0.0.0:$PORT --workers 2"
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.0
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: DATABASE_URL
+        fromDatabase:
+          name: novaos-db
+          property: connectionString
+      - key: NOVAOS_SECURITY_LEVEL
+        value: STRICT
+      - key: NOVAOS_MASTER_PASSWORD
+        generateValue: true
+      - key: NOVAOS_DAILY_BUDGET
+        value: "200.0"
+      - key: TELEGRAM_BOT_TOKEN
+        sync: false
+      - key: TELEGRAM_ADMIN_CHAT_ID
+        sync: false
+
+  # Telegram Bot
+  - type: worker
+    name: novaos-telegram-bot
+    env: python
+    region: oregon
+    plan: starter
+    buildCommand: "pip install -r requirements-production.txt"
+    startCommand: "python telegram_bot/bot.py"
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.0
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: DATABASE_URL
+        fromDatabase:
+          name: novaos-db
+          property: connectionString
+      - key: TELEGRAM_BOT_TOKEN
+        sync: false
+      - key: TELEGRAM_ADMIN_CHAT_ID
+        sync: false
+      - key: NOVAOS_DAILY_BUDGET
+        value: "200.0"
+
+  # ===== DIGITAL PRODUCT CREATORS (5 instances) =====
+
+  - type: worker
+    name: product-creator-ai-ml
+    env: python
+    region: oregon
+    plan: starter
+    buildCommand: "pip install -r requirements-production.txt"
+    startCommand: "python -c 'from revenue_agents import DigitalProductCreator; agent = DigitalProductCreator(worker_id=\"product_ai_ml\", niche=\"AI/ML\", run_interval=1800); agent.start(); import time; time.sleep(float(\"inf\"))'"
+    envVars:
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: DATABASE_URL
+        fromDatabase:
+          name: novaos-db
+          property: connectionString
+      - key: GUMROAD_API_KEY
+        sync: false
+      - key: NOVAOS_DAILY_BUDGET
+        value: "200.0"
+
+  - type: worker
+    name: product-creator-productivity
+    env: python
+    region: oregon
+    plan: starter
+    buildCommand: "pip install -r requirements-production.txt"
+    startCommand: "python -c 'from revenue_agents import DigitalProductCreator; agent = DigitalProductCreator(worker_id=\"product_productivity\", niche=\"Productivity\", run_interval=1800); agent.start(); import time; time.sleep(float(\"inf\"))'"
+    envVars:
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: DATABASE_URL
+        fromDatabase:
+          name: novaos-db
+          property: connectionString
+      - key: GUMROAD_API_KEY
+        sync: false
+      - key: NOVAOS_DAILY_BUDGET
+        value: "200.0"
+
+  - type: worker
+    name: product-creator-business
+    env: python
+    region: oregon
+    plan: starter
+    buildCommand: "pip install -r requirements-production.txt"
+    startCommand: "python -c 'from revenue_agents import DigitalProductCreator; agent = DigitalProductCreator(worker_id=\"product_business\", niche=\"Business Automation\", run_interval=1800); agent.start(); import time; time.sleep(float(\"inf\"))'"
+    envVars:
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: DATABASE_URL
+        fromDatabase:
+          name: novaos-db
+          property: connectionString
+      - key: GUMROAD_API_KEY
+        sync: false
+      - key: NOVAOS_DAILY_BUDGET
+        value: "200.0"
+
+  - type: worker
+    name: product-creator-dev-tools
+    env: python
+    region: oregon
+    plan: starter
+    buildCommand: "pip install -r requirements-production.txt"
+    startCommand: "python -c 'from revenue_agents import DigitalProductCreator; agent = DigitalProductCreator(worker_id=\"product_dev\", niche=\"Developer Tools\", run_interval=1800); agent.start(); import time; time.sleep(float(\"inf\"))'"
+    envVars:
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: DATABASE_URL
+        fromDatabase:
+          name: novaos-db
+          property: connectionString
+      - key: GUMROAD_API_KEY
+        sync: false
+      - key: NOVAOS_DAILY_BUDGET
+        value: "200.0"
+
+  - type: worker
+    name: product-creator-creator-tools
+    env: python
+    region: oregon
+    plan: starter
+    buildCommand: "pip install -r requirements-production.txt"
+    startCommand: "python -c 'from revenue_agents import DigitalProductCreator; agent = DigitalProductCreator(worker_id=\"product_creator\", niche=\"Creator Tools\", run_interval=1800); agent.start(); import time; time.sleep(float(\"inf\"))'"
+    envVars:
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: DATABASE_URL
+        fromDatabase:
+          name: novaos-db
+          property: connectionString
+      - key: GUMROAD_API_KEY
+        sync: false
+      - key: NOVAOS_DAILY_BUDGET
+        value: "200.0"
+
+  # ===== CONTENT ARBITRAGE (3 instances) =====
+
+  - type: worker
+    name: content-arbitrage-upwork
+    env: python
+    region: oregon
+    plan: starter
+    buildCommand: "pip install -r requirements-production.txt"
+    startCommand: "python -c 'from revenue_agents import ContentArbitrage; agent = ContentArbitrage(worker_id=\"arbitrage_upwork\", platform=\"upwork\", run_interval=300); agent.start(); import time; time.sleep(float(\"inf\"))'"
+    envVars:
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: DATABASE_URL
+        fromDatabase:
+          name: novaos-db
+          property: connectionString
+      - key: NOVAOS_DAILY_BUDGET
+        value: "200.0"
+
+  - type: worker
+    name: content-arbitrage-fiverr
+    env: python
+    region: oregon
+    plan: starter
+    buildCommand: "pip install -r requirements-production.txt"
+    startCommand: "python -c 'from revenue_agents import ContentArbitrage; agent = ContentArbitrage(worker_id=\"arbitrage_fiverr\", platform=\"fiverr\", run_interval=300); agent.start(); import time; time.sleep(float(\"inf\"))'"
+    envVars:
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: DATABASE_URL
+        fromDatabase:
+          name: novaos-db
+          property: connectionString
+      - key: NOVAOS_DAILY_BUDGET
+        value: "200.0"
+
+  - type: worker
+    name: content-arbitrage-freelancer
+    env: python
+    region: oregon
+    plan: starter
+    buildCommand: "pip install -r requirements-production.txt"
+    startCommand: "python -c 'from revenue_agents import ContentArbitrage; agent = ContentArbitrage(worker_id=\"arbitrage_freelancer\", platform=\"freelancer\", run_interval=300); agent.start(); import time; time.sleep(float(\"inf\"))'"
+    envVars:
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: DATABASE_URL
+        fromDatabase:
+          name: novaos-db
+          property: connectionString
+      - key: NOVAOS_DAILY_BUDGET
+        value: "200.0"
+
+  # ===== LEAD GENERATORS (10 instances) =====
+
+  - type: worker
+    name: lead-gen-saas
+    env: python
+    region: oregon
+    plan: starter
+    buildCommand: "pip install -r requirements-production.txt"
+    startCommand: "python -c 'from revenue_agents import LeadGenerator; agent = LeadGenerator(worker_id=\"leads_saas\", target_industry=\"SaaS\", run_interval=900, leads_per_cycle=25); agent.start(); import time; time.sleep(float(\"inf\"))'"
+    envVars:
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: DATABASE_URL
+        fromDatabase:
+          name: novaos-db
+          property: connectionString
+      - key: SENDGRID_API_KEY
+        sync: false
+      - key: NOVAOS_DAILY_BUDGET
+        value: "200.0"
+
+  - type: worker
+    name: lead-gen-ecommerce
+    env: python
+    region: oregon
+    plan: starter
+    buildCommand: "pip install -r requirements-production.txt"
+    startCommand: "python -c 'from revenue_agents import LeadGenerator; agent = LeadGenerator(worker_id=\"leads_ecomm\", target_industry=\"Ecommerce\", run_interval=900, leads_per_cycle=25); agent.start(); import time; time.sleep(float(\"inf\"))'"
+    envVars:
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: DATABASE_URL
+        fromDatabase:
+          name: novaos-db
+          property: connectionString
+      - key: SENDGRID_API_KEY
+        sync: false
+      - key: NOVAOS_DAILY_BUDGET
+        value: "200.0"
+
+  - type: worker
+    name: lead-gen-marketing-agencies
+    env: python
+    region: oregon
+    plan: starter
+    buildCommand: "pip install -r requirements-production.txt"
+    startCommand: "python -c 'from revenue_agents import LeadGenerator; agent = LeadGenerator(worker_id=\"leads_marketing\", target_industry=\"Marketing Agencies\", run_interval=900, leads_per_cycle=25); agent.start(); import time; time.sleep(float(\"inf\"))'"
+    envVars:
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: DATABASE_URL
+        fromDatabase:
+          name: novaos-db
+          property: connectionString
+      - key: SENDGRID_API_KEY
+        sync: false
+      - key: NOVAOS_DAILY_BUDGET
+        value: "200.0"
+
+  - type: worker
+    name: lead-gen-consulting
+    env: python
+    region: oregon
+    plan: starter
+    buildCommand: "pip install -r requirements-production.txt"
+    startCommand: "python -c 'from revenue_agents import LeadGenerator; agent = LeadGenerator(worker_id=\"leads_consulting\", target_industry=\"Consulting\", run_interval=900, leads_per_cycle=25); agent.start(); import time; time.sleep(float(\"inf\"))'"
+    envVars:
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: DATABASE_URL
+        fromDatabase:
+          name: novaos-db
+          property: connectionString
+      - key: SENDGRID_API_KEY
+        sync: false
+      - key: NOVAOS_DAILY_BUDGET
+        value: "200.0"
+
+  - type: worker
+    name: lead-gen-real-estate
+    env: python
+    region: oregon
+    plan: starter
+    buildCommand: "pip install -r requirements-production.txt"
+    startCommand: "python -c 'from revenue_agents import LeadGenerator; agent = LeadGenerator(worker_id=\"leads_realestate\", target_industry=\"Real Estate\", run_interval=900, leads_per_cycle=25); agent.start(); import time; time.sleep(float(\"inf\"))'"
+    envVars:
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: DATABASE_URL
+        fromDatabase:
+          name: novaos-db
+          property: connectionString
+      - key: SENDGRID_API_KEY
+        sync: false
+      - key: NOVAOS_DAILY_BUDGET
+        value: "200.0"
+
+  - type: worker
+    name: lead-gen-healthcare
+    env: python
+    region: oregon
+    plan: starter
+    buildCommand: "pip install -r requirements-production.txt"
+    startCommand: "python -c 'from revenue_agents import LeadGenerator; agent = LeadGenerator(worker_id=\"leads_healthcare\", target_industry=\"Healthcare\", run_interval=900, leads_per_cycle=25); agent.start(); import time; time.sleep(float(\"inf\"))'"
+    envVars:
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: DATABASE_URL
+        fromDatabase:
+          name: novaos-db
+          property: connectionString
+      - key: SENDGRID_API_KEY
+        sync: false
+      - key: NOVAOS_DAILY_BUDGET
+        value: "200.0"
+
+  - type: worker
+    name: lead-gen-fintech
+    env: python
+    region: oregon
+    plan: starter
+    buildCommand: "pip install -r requirements-production.txt"
+    startCommand: "python -c 'from revenue_agents import LeadGenerator; agent = LeadGenerator(worker_id=\"leads_fintech\", target_industry=\"Fintech\", run_interval=900, leads_per_cycle=25); agent.start(); import time; time.sleep(float(\"inf\"))'"
+    envVars:
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: DATABASE_URL
+        fromDatabase:
+          name: novaos-db
+          property: connectionString
+      - key: SENDGRID_API_KEY
+        sync: false
+      - key: NOVAOS_DAILY_BUDGET
+        value: "200.0"
+
+  - type: worker
+    name: lead-gen-legal
+    env: python
+    region: oregon
+    plan: starter
+    buildCommand: "pip install -r requirements-production.txt"
+    startCommand: "python -c 'from revenue_agents import LeadGenerator; agent = LeadGenerator(worker_id=\"leads_legal\", target_industry=\"Legal Services\", run_interval=900, leads_per_cycle=25); agent.start(); import time; time.sleep(float(\"inf\"))'"
+    envVars:
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: DATABASE_URL
+        fromDatabase:
+          name: novaos-db
+          property: connectionString
+      - key: SENDGRID_API_KEY
+        sync: false
+      - key: NOVAOS_DAILY_BUDGET
+        value: "200.0"
+
+  - type: worker
+    name: lead-gen-education
+    env: python
+    region: oregon
+    plan: starter
+    buildCommand: "pip install -r requirements-production.txt"
+    startCommand: "python -c 'from revenue_agents import LeadGenerator; agent = LeadGenerator(worker_id=\"leads_education\", target_industry=\"Education\", run_interval=900, leads_per_cycle=25); agent.start(); import time; time.sleep(float(\"inf\"))'"
+    envVars:
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: DATABASE_URL
+        fromDatabase:
+          name: novaos-db
+          property: connectionString
+      - key: SENDGRID_API_KEY
+        sync: false
+      - key: NOVAOS_DAILY_BUDGET
+        value: "200.0"
+
+  - type: worker
+    name: lead-gen-hospitality
+    env: python
+    region: oregon
+    plan: starter
+    buildCommand: "pip install -r requirements-production.txt"
+    startCommand: "python -c 'from revenue_agents import LeadGenerator; agent = LeadGenerator(worker_id=\"leads_hospitality\", target_industry=\"Hospitality\", run_interval=900, leads_per_cycle=25); agent.start(); import time; time.sleep(float(\"inf\"))'"
+    envVars:
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: DATABASE_URL
+        fromDatabase:
+          name: novaos-db
+          property: connectionString
+      - key: SENDGRID_API_KEY
+        sync: false
+      - key: NOVAOS_DAILY_BUDGET
+        value: "200.0"
+
+databases:
+  # PostgreSQL Database
+  - name: novaos-db
+    databaseName: novaos_production
+    user: novaos
+    plan: starter

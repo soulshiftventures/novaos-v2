@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Financial Dashboard - NovaOS V2</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/">NovaOS V2</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/">Overview</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/agents">Agent Map</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/financial">Financial</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/opportunities">Opportunities</a>
+                    </li>
+                </ul>
+                <span class="navbar-text ms-auto" id="last-update">
+                    Auto-refresh in <span id="countdown">30</span>s
+                </span>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid mt-4">
+        <div class="row">
+            <div class="col-12">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h1>Financial Dashboard</h1>
+                    <div>
+                        <a href="/api/export/financial" class="btn btn-outline-light" download>Export CSV</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Summary Cards -->
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="card metric-card">
+                    <div class="card-body">
+                        <h6 class="card-subtitle mb-2 text-muted">Total Revenue</h6>
+                        <h3 class="card-title text-success" id="total-revenue">$0.00</h3>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card metric-card">
+                    <div class="card-body">
+                        <h6 class="card-subtitle mb-2 text-muted">Total Costs</h6>
+                        <h3 class="card-title text-danger" id="total-costs">$0.00</h3>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card metric-card">
+                    <div class="card-body">
+                        <h6 class="card-subtitle mb-2 text-muted">Total Profit</h6>
+                        <h3 class="card-title" id="total-profit">$0.00</h3>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card metric-card">
+                    <div class="card-body">
+                        <h6 class="card-subtitle mb-2 text-muted">Overall ROI</h6>
+                        <h3 class="card-title" id="total-roi">0%</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Charts Row -->
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">Revenue Trend (Last 30 Days)</h5>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="revenueChart"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">Cost Trend (Last 30 Days)</h5>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="costChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ROI by Department Chart -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">ROI by Department</h5>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="roiChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Top Agents Tables -->
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">Top 5 Revenue Agents</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-sm" id="top-revenue-table">
+                                <thead>
+                                    <tr>
+                                        <th>Agent</th>
+                                        <th>Department</th>
+                                        <th>Revenue</th>
+                                        <th>ROI</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr><td colspan="4" class="text-muted">Loading...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">Most Expensive 5 Agents</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-sm" id="most-expensive-table">
+                                <thead>
+                                    <tr>
+                                        <th>Agent</th>
+                                        <th>Department</th>
+                                        <th>Cost</th>
+                                        <th>Revenue</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr><td colspan="4" class="text-muted">Loading...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let countdown = 30;
+        let countdownInterval;
+        let revenueChart, costChart, roiChart;
+
+        function formatCurrency(value) {
+            return '$' + parseFloat(value).toFixed(2);
+        }
+
+        function formatPercent(value) {
+            return parseFloat(value).toFixed(1) + '%';
+        }
+
+        async function loadFinancialSummary() {
+            try {
+                const response = await fetch('/api/financial/summary');
+                const data = await response.json();
+
+                document.getElementById('total-revenue').textContent = formatCurrency(data.total_revenue);
+                document.getElementById('total-costs').textContent = formatCurrency(data.total_costs);
+                document.getElementById('total-profit').textContent = formatCurrency(data.total_profit);
+                document.getElementById('total-roi').textContent = formatPercent(data.total_roi);
+
+                // Color code profit and ROI
+                const profitElem = document.getElementById('total-profit');
+                profitElem.className = 'card-title ' + (data.total_profit >= 0 ? 'text-success' : 'text-danger');
+
+                const roiElem = document.getElementById('total-roi');
+                roiElem.className = 'card-title ' + (data.total_roi >= 300 ? 'text-success' : data.total_roi >= 100 ? 'text-warning' : 'text-danger');
+
+            } catch (error) {
+                console.error('Error loading financial summary:', error);
+            }
+        }
+
+        async function loadFinancialTrends() {
+            try {
+                const response = await fetch('/api/financial/trends');
+                const data = await response.json();
+
+                // Revenue Chart
+                const revenueDates = data.revenue.map(d => d.date);
+                const revenueAmounts = data.revenue.map(d => d.amount);
+
+                if (revenueChart) {
+                    revenueChart.destroy();
+                }
+
+                const revenueCtx = document.getElementById('revenueChart').getContext('2d');
+                revenueChart = new Chart(revenueCtx, {
+                    type: 'line',
+                    data: {
+                        labels: revenueDates,
+                        datasets: [{
+                            label: 'Revenue',
+                            data: revenueAmounts,
+                            borderColor: 'rgb(75, 192, 192)',
+                            backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                            tension: 0.1,
+                            fill: true
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: true,
+                        plugins: {
+                            legend: {
+                                display: false
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: {
+                                    callback: function(value) {
+                                        return '$' + value.toFixed(0);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+
+                // Cost Chart
+                const costDates = data.costs.map(d => d.date);
+                const costAmounts = data.costs.map(d => d.amount);
+
+                if (costChart) {
+                    costChart.destroy();
+                }
+
+                const costCtx = document.getElementById('costChart').getContext('2d');
+                costChart = new Chart(costCtx, {
+                    type: 'line',
+                    data: {
+                        labels: costDates,
+                        datasets: [{
+                            label: 'Costs',
+                            data: costAmounts,
+                            borderColor: 'rgb(255, 99, 132)',
+                            backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                            tension: 0.1,
+                            fill: true
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: true,
+                        plugins: {
+                            legend: {
+                                display: false
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: {
+                                    callback: function(value) {
+                                        return '$' + value.toFixed(2);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+
+            } catch (error) {
+                console.error('Error loading financial trends:', error);
+            }
+        }
+
+        async function loadDepartmentROI() {
+            try {
+                const response = await fetch('/api/financial/departments');
+                const data = await response.json();
+
+                const departments = data.departments.map(d => d.department);
+                const rois = data.departments.map(d => d.roi);
+
+                // Color code based on ROI
+                const colors = rois.map(roi => {
+                    if (roi >= 300) return 'rgba(75, 192, 192, 0.8)';
+                    if (roi >= 100) return 'rgba(255, 206, 86, 0.8)';
+                    return 'rgba(255, 99, 132, 0.8)';
+                });
+
+                if (roiChart) {
+                    roiChart.destroy();
+                }
+
+                const roiCtx = document.getElementById('roiChart').getContext('2d');
+                roiChart = new Chart(roiCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: departments,
+                        datasets: [{
+                            label: 'ROI %',
+                            data: rois,
+                            backgroundColor: colors
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: true,
+                        plugins: {
+                            legend: {
+                                display: false
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: {
+                                    callback: function(value) {
+                                        return value + '%';
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+
+            } catch (error) {
+                console.error('Error loading department ROI:', error);
+            }
+        }
+
+        async function loadTopAgents() {
+            try {
+                const response = await fetch('/api/financial/top-agents');
+                const data = await response.json();
+
+                // Top Revenue
+                const topRevenueTable = document.getElementById('top-revenue-table').getElementsByTagName('tbody')[0];
+                topRevenueTable.innerHTML = '';
+
+                if (data.top_revenue.length === 0) {
+                    topRevenueTable.innerHTML = '<tr><td colspan="4" class="text-muted">No data available</td></tr>';
+                } else {
+                    data.top_revenue.forEach(agent => {
+                        const row = topRevenueTable.insertRow();
+                        const roiClass = agent.roi >= 3 ? 'text-success' : agent.roi >= 1 ? 'text-warning' : 'text-danger';
+                        row.innerHTML = `
+                            <td>${agent.name}</td>
+                            <td>${agent.department || 'N/A'}</td>
+                            <td class="text-success">${formatCurrency(agent.revenue_generated)}</td>
+                            <td class="${roiClass}">${(agent.roi * 100).toFixed(0)}%</td>
+                        `;
+                    });
+                }
+
+                // Most Expensive
+                const mostExpensiveTable = document.getElementById('most-expensive-table').getElementsByTagName('tbody')[0];
+                mostExpensiveTable.innerHTML = '';
+
+                if (data.most_expensive.length === 0) {
+                    mostExpensiveTable.innerHTML = '<tr><td colspan="4" class="text-muted">No data available</td></tr>';
+                } else {
+                    data.most_expensive.forEach(agent => {
+                        const row = mostExpensiveTable.insertRow();
+                        row.innerHTML = `
+                            <td>${agent.name}</td>
+                            <td>${agent.department || 'N/A'}</td>
+                            <td class="text-danger">${formatCurrency(agent.total_cost)}</td>
+                            <td>${formatCurrency(agent.revenue_generated || 0)}</td>
+                        `;
+                    });
+                }
+
+            } catch (error) {
+                console.error('Error loading top agents:', error);
+            }
+        }
+
+        function startCountdown() {
+            countdownInterval = setInterval(() => {
+                countdown--;
+                document.getElementById('countdown').textContent = countdown;
+
+                if (countdown <= 0) {
+                    countdown = 30;
+                    loadAllData();
+                }
+            }, 1000);
+        }
+
+        function loadAllData() {
+            loadFinancialSummary();
+            loadFinancialTrends();
+            loadDepartmentROI();
+            loadTopAgents();
+        }
+
+        // Initial load
+        loadAllData();
+        startCountdown();
+    </script>
+</body>
+</html>

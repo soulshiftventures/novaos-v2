@@ -1,0 +1,104 @@
+#!/usr/bin/env python3
+"""
+NovaOS Dashboard Standalone Launcher
+Use this if the main CLI has dependency issues
+"""
+
+import sys
+import os
+from pathlib import Path
+
+# Add parent directory to path
+sys.path.insert(0, str(Path(__file__).parent.parent))
+
+def main():
+    """Main entry point"""
+    if len(sys.argv) < 2:
+        print("NovaOS Dashboard")
+        print("\nUsage:")
+        print("  ./nova-dashboard start   - Start dashboard server")
+        print("  ./nova-dashboard stop    - Stop dashboard server")
+        print("  ./nova-dashboard status  - Check dashboard status")
+        sys.exit(1)
+
+    command = sys.argv[1].lower()
+
+    if command == 'start':
+        print("=" * 60)
+        print("NovaOS V2 Visual Dashboard")
+        print("=" * 60)
+        print("Starting server on http://localhost:5001")
+        print("Press Ctrl+C to stop")
+        print("=" * 60)
+        print()
+
+        # Import and run Flask app
+        dashboard_dir = Path(__file__).parent
+        os.chdir(dashboard_dir)
+
+        # Check if already running
+        try:
+            import requests
+            response = requests.get("http://localhost:5001/api/overview", timeout=1)
+            if response.status_code == 200:
+                print("✓ Dashboard is already running at http://localhost:5001")
+                sys.exit(0)
+        except:
+            pass
+
+        # Start Flask
+        from app import app
+        app.run(host='0.0.0.0', port=5001, debug=True)
+
+    elif command == 'stop':
+        import subprocess
+
+        print("=" * 60)
+        print("Stopping NovaOS Dashboard")
+        print("=" * 60)
+
+        try:
+            result = subprocess.run(
+                ["lsof", "-ti:5001"],
+                capture_output=True,
+                text=True
+            )
+
+            if result.stdout.strip():
+                pid = result.stdout.strip()
+                subprocess.run(["kill", pid])
+                print(f"✓ Dashboard stopped (PID: {pid})")
+            else:
+                print("Dashboard is not running")
+        except Exception as e:
+            print(f"Error: {e}")
+
+    elif command == 'status':
+        print("=" * 60)
+        print("Dashboard Status")
+        print("=" * 60)
+
+        try:
+            import requests
+            response = requests.get("http://localhost:5001/api/overview", timeout=1)
+
+            if response.status_code == 200:
+                print("✓ Dashboard is RUNNING")
+                print("  URL: http://localhost:5001")
+                data = response.json()
+                print(f"  System Health: {data['system_health']}")
+                print(f"  Active Agents: {data['active_agents']}")
+            else:
+                print("✗ Dashboard is not responding correctly")
+        except Exception:
+            print("✗ Dashboard is NOT RUNNING")
+            print("\nTo start: ./nova-dashboard start")
+
+    else:
+        print(f"Unknown command: {command}")
+        print("Use: start, stop, or status")
+        sys.exit(1)
+
+
+if __name__ == '__main__':
+    main()

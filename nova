@@ -1,0 +1,12 @@
+#!/bin/bash
+# NovaOS CLI Wrapper
+# This script ensures we use the correct Python version (3.12.12)
+
+# Use pyenv Python 3.12.12
+PYTHON="~/.pyenv/versions/3.12.12/bin/python3"
+
+# Expand tilde
+PYTHON="${PYTHON/#\~/$HOME}"
+
+# Run CLI with all arguments
+$PYTHON "$(dirname "$0")/cli.py" "$@"

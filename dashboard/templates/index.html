@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NovaOS V2 - Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/">NovaOS V2</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/">Overview</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/agents">Agent Map</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/financial">Financial</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/opportunities">Opportunities</a>
+                    </li>
+                </ul>
+                <span class="navbar-text ms-auto" id="last-update">
+                    Auto-refresh in <span id="countdown">30</span>s
+                </span>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid mt-4">
+        <div class="row">
+            <div class="col-12">
+                <h1 class="mb-4">System Overview</h1>
+            </div>
+        </div>
+
+        <!-- Big Numbers Row -->
+        <div class="row mb-4">
+            <!-- Revenue Card -->
+            <div class="col-md-3">
+                <div class="card metric-card">
+                    <div class="card-body">
+                        <h6 class="card-subtitle mb-2 text-muted">Revenue</h6>
+                        <h2 class="card-title mb-0" id="revenue-today">$0.00</h2>
+                        <p class="text-muted mb-1"><small>Today</small></p>
+                        <p class="mb-0">
+                            Week: <strong id="revenue-week">$0.00</strong><br>
+                            Month: <strong id="revenue-month">$0.00</strong>
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Costs Card -->
+            <div class="col-md-3">
+                <div class="card metric-card">
+                    <div class="card-body">
+                        <h6 class="card-subtitle mb-2 text-muted">AI Costs</h6>
+                        <h2 class="card-title mb-0" id="cost-today">$0.00</h2>
+                        <p class="text-muted mb-1">
+                            <small>Today (<span id="cost-percent-today">0</span>%)</small>
+                        </p>
+                        <p class="mb-0">
+                            Week: <strong id="cost-week">$0.00</strong> (<span id="cost-percent-week">0</span>%)<br>
+                            Month: <strong id="cost-month">$0.00</strong> (<span id="cost-percent-month">0</span>%)
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ROI Card -->
+            <div class="col-md-3">
+                <div class="card metric-card">
+                    <div class="card-body">
+                        <h6 class="card-subtitle mb-2 text-muted">ROI</h6>
+                        <h2 class="card-title mb-0" id="roi-month">0%</h2>
+                        <p class="text-muted mb-1"><small>Month</small></p>
+                        <p class="mb-0">
+                            Today: <strong id="roi-today">0%</strong><br>
+                            Week: <strong id="roi-week">0%</strong>
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- System Status Card -->
+            <div class="col-md-3">
+                <div class="card metric-card">
+                    <div class="card-body">
+                        <h6 class="card-subtitle mb-2 text-muted">System Status</h6>
+                        <h2 class="card-title mb-0">
+                            <span class="badge bg-success" id="health-badge">Healthy</span>
+                        </h2>
+                        <p class="text-muted mb-1"><small>Active Agents</small></p>
+                        <p class="mb-0">
+                            <strong id="active-agents">0</strong> agents running
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Alerts Row -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">System Alerts</h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="alerts-container">
+                            <p class="text-muted">Loading alerts...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Links -->
+        <div class="row mb-4">
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Agent Map</h5>
+                        <p class="card-text">View all agents organized by department with real-time status.</p>
+                        <a href="/agents" class="btn btn-primary">View Agents</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Financial Dashboard</h5>
+                        <p class="card-text">Detailed revenue, costs, and ROI analysis with trends.</p>
+                        <a href="/financial" class="btn btn-primary">View Financial</a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Opportunities</h5>
+                        <p class="card-text">CMO-identified opportunities and pipeline visualization.</p>
+                        <a href="/opportunities" class="btn btn-primary">View Opportunities</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/static/js/charts.js"></script>
+    <script>
+        let countdown = 30;
+        let countdownInterval;
+
+        function formatCurrency(value) {
+            return '$' + parseFloat(value).toFixed(2);
+        }
+
+        function formatPercent(value) {
+            return parseFloat(value).toFixed(1);
+        }
+
+        function updateHealthBadge(health) {
+            const badge = document.getElementById('health-badge');
+            badge.className = 'badge';
+
+            if (health === 'healthy') {
+                badge.classList.add('bg-success');
+                badge.textContent = 'Healthy';
+            } else if (health === 'warning') {
+                badge.classList.add('bg-warning');
+                badge.textContent = 'Warning';
+            } else {
+                badge.classList.add('bg-danger');
+                badge.textContent = 'Critical';
+            }
+        }
+
+        function updateROIColor(roi, elementId) {
+            const element = document.getElementById(elementId);
+            element.className = '';
+
+            if (roi >= 300) {
+                element.classList.add('text-success');
+            } else if (roi >= 100) {
+                element.classList.add('text-warning');
+            } else {
+                element.classList.add('text-danger');
+            }
+        }
+
+        async function loadOverview() {
+            try {
+                const response = await fetch('/api/overview');
+                const data = await response.json();
+
+                // Update revenue
+                document.getElementById('revenue-today').textContent = formatCurrency(data.revenue.today);
+                document.getElementById('revenue-week').textContent = formatCurrency(data.revenue.week);
+                document.getElementById('revenue-month').textContent = formatCurrency(data.revenue.month);
+
+                // Update costs
+                document.getElementById('cost-today').textContent = formatCurrency(data.costs.today);
+                document.getElementById('cost-week').textContent = formatCurrency(data.costs.week);
+                document.getElementById('cost-month').textContent = formatCurrency(data.costs.month);
+
+                document.getElementById('cost-percent-today').textContent = formatPercent(data.cost_percent.today);
+                document.getElementById('cost-percent-week').textContent = formatPercent(data.cost_percent.week);
+                document.getElementById('cost-percent-month').textContent = formatPercent(data.cost_percent.month);
+
+                // Update ROI
+                document.getElementById('roi-today').textContent = formatPercent(data.roi.today) + '%';
+                document.getElementById('roi-week').textContent = formatPercent(data.roi.week) + '%';
+                document.getElementById('roi-month').textContent = formatPercent(data.roi.month) + '%';
+
+                updateROIColor(data.roi.month, 'roi-month');
+
+                // Update system status
+                document.getElementById('active-agents').textContent = data.active_agents;
+                updateHealthBadge(data.system_health);
+
+            } catch (error) {
+                console.error('Error loading overview:', error);
+            }
+        }
+
+        async function loadAlerts() {
+            try {
+                const response = await fetch('/api/alerts');
+                const data = await response.json();
+
+                const container = document.getElementById('alerts-container');
+
+                if (data.alerts.length === 0) {
+                    container.innerHTML = '<p class="text-success mb-0">All systems operational - no alerts</p>';
+                } else {
+                    container.innerHTML = '';
+                    data.alerts.forEach(alert => {
+                        const alertClass = alert.level === 'critical' ? 'danger' : 'warning';
+                        const alertDiv = document.createElement('div');
+                        alertDiv.className = `alert alert-${alertClass} mb-2`;
+                        alertDiv.textContent = alert.message;
+                        container.appendChild(alertDiv);
+                    });
+                }
+            } catch (error) {
+                console.error('Error loading alerts:', error);
+            }
+        }
+
+        function startCountdown() {
+            countdownInterval = setInterval(() => {
+                countdown--;
+                document.getElementById('countdown').textContent = countdown;
+
+                if (countdown <= 0) {
+                    countdown = 30;
+                    loadOverview();
+                    loadAlerts();
+                }
+            }, 1000);
+        }
+
+        // Initial load
+        loadOverview();
+        loadAlerts();
+        startCountdown();
+    </script>
+</body>
+</html>
