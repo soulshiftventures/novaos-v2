@@ -165,11 +165,18 @@ class StripeIntegration:
                     amount = charge.amount / 100  # Convert from cents
                     total_revenue += amount
 
+                    # Safe timestamp conversion with fallback
+                    try:
+                        created_dt = datetime.fromtimestamp(charge.created)
+                    except (OSError, OverflowError, ValueError):
+                        # Use current time as fallback for invalid timestamps
+                        created_dt = datetime.now()
+
                     charge_list.append({
                         'id': charge.id,
                         'amount': amount,
                         'currency': charge.currency,
-                        'created': datetime.fromtimestamp(charge.created),
+                        'created': created_dt,
                         'customer': charge.customer
                     })
 

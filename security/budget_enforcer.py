@@ -171,7 +171,7 @@ class BudgetEnforcer:
         global_daily_limit: float = 100.0,
         global_hourly_limit: float = 20.0,
         per_agent_daily_limit: float = 10.0,
-        per_operation_limit: float = 1.0,
+        per_operation_limit: float = 30.0,
         high_cost_threshold: float = 5.0,  # Requires approval
         emergency_stop_threshold: float = 150.0,  # Emergency stop
         api_calls_per_minute: int = 60
