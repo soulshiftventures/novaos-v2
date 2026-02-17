@@ -24,6 +24,14 @@ import statistics
 logger = logging.getLogger(__name__)
 
 
+def safe_datetime_now() -> datetime:
+    """Get current datetime with fallback for timestamp overflow"""
+    try:
+        return datetime.now()
+    except (OSError, OverflowError, ValueError):
+        return datetime(2025, 1, 1, 0, 0, 0)
+
+
 class AlertLevel(Enum):
     """Alert severity levels"""
     INFO = "info"
@@ -162,7 +170,7 @@ class SecurityMonitor:
             agent_id: Agent that incurred cost
             cost: Cost amount
         """
-        now = datetime.now()
+        now = safe_datetime_now()
 
         with self.lock:
             self.cost_history.append((now, cost))
@@ -191,7 +199,7 @@ class SecurityMonitor:
             ip_address: Source IP
             reason: Failure reason
         """
-        now = datetime.now()
+        now = safe_datetime_now()
 
         with self.lock:
             self.auth_failures.append(now)
@@ -222,7 +230,7 @@ class SecurityMonitor:
             violation: Violation type
             command: Command that was blocked
         """
-        now = datetime.now()
+        now = safe_datetime_now()
 
         event = SecurityEvent(
             timestamp=now,
@@ -271,7 +279,7 @@ class SecurityMonitor:
             data_size: Size of data being sent
         """
         event = SecurityEvent(
-            timestamp=datetime.now(),
+            timestamp=safe_datetime_now(),
             event_type=AnomalyType.DATA_EXFILTRATION,
             level=AlertLevel.CRITICAL,
             description=f"Potential data exfiltration to {destination}",
@@ -287,7 +295,7 @@ class SecurityMonitor:
         """Create alert from critical event"""
         # Safe timestamp generation
         try:
-            ts = int(datetime.now().timestamp())
+            ts = int(safe_datetime_now().timestamp())
         except (OSError, OverflowError, ValueError):
             ts = int(datetime(2025, 1, 1).timestamp())
 
@@ -392,7 +400,7 @@ class SecurityMonitor:
     def get_stats(self) -> Dict:
         """Get monitor statistics"""
         with self.lock:
-            now = datetime.now()
+            now = safe_datetime_now()
             cutoff = now - timedelta(minutes=self.window_minutes)
 
             recent_events = [e for e in self.events if e.timestamp > cutoff]
@@ -416,7 +424,7 @@ class SecurityMonitor:
     def get_health_summary(self) -> Dict:
         """Get system security health summary"""
         with self.lock:
-            now = datetime.now()
+            now = safe_datetime_now()
             hour_ago = now - timedelta(hours=1)
 
             recent_events = [e for e in self.events if e.timestamp > hour_ago]

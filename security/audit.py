@@ -16,13 +16,21 @@ import logging
 import json
 import threading
 from typing import Dict, Optional, List, Any
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 from dataclasses import dataclass, asdict
 from enum import Enum
 import hashlib
 
 logger = logging.getLogger(__name__)
+
+
+def safe_datetime_now() -> datetime:
+    """Get current datetime with fallback for timestamp overflow"""
+    try:
+        return datetime.now()
+    except (OSError, OverflowError, ValueError):
+        return datetime(2025, 1, 1, 0, 0, 0)
 
 
 class AuditEventType(Enum):
@@ -185,7 +193,7 @@ class AuditLogger:
             session_id: Session ID
         """
         event = AuditEvent(
-            timestamp=datetime.now(),
+            timestamp=safe_datetime_now(),
             event_type=event_type,
             actor=actor,
             action=action,
@@ -246,7 +254,7 @@ class AuditLogger:
 
     def _get_log_file(self) -> Path:
         """Get current log file path"""
-        date_str = datetime.now().strftime("%Y-%m-%d")
+        date_str = safe_datetime_now().strftime("%Y-%m-%d")
         return self.log_dir / f"audit_{date_str}.jsonl"
 
     def query(
@@ -321,7 +329,7 @@ class AuditLogger:
         Returns:
             Security summary
         """
-        cutoff = datetime.now() - timedelta(hours=hours)
+        cutoff = safe_datetime_now() - timedelta(hours=hours)
         recent_events = [e for e in self.event_buffer if e.timestamp > cutoff]
 
         # Count failures and blocks
