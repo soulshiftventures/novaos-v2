@@ -22,6 +22,14 @@ import time
 logger = logging.getLogger(__name__)
 
 
+def safe_datetime_now() -> datetime:
+    """Get current datetime with fallback for timestamp overflow"""
+    try:
+        return datetime.now()
+    except (OSError, OverflowError, ValueError):
+        return datetime(2025, 1, 1, 0, 0, 0)
+
+
 class BudgetStatus(Enum):
     """Budget status states"""
     HEALTHY = "healthy"
@@ -38,12 +46,12 @@ class BudgetLimit:
     limit: float  # Dollar amount
     period: str  # 'hourly', 'daily', 'weekly', 'monthly', 'operation'
     current_spend: float = 0.0
-    period_start: datetime = field(default_factory=datetime.now)
+    period_start: datetime = field(default_factory=safe_datetime_now)
     enforced: bool = True  # Hard limit vs soft limit
 
     def reset_if_needed(self):
         """Reset budget if period has elapsed"""
-        now = datetime.now()
+        now = safe_datetime_now()
         should_reset = False
 
         if self.period == 'hourly' and (now - self.period_start) > timedelta(hours=1):
@@ -480,7 +488,7 @@ class BudgetEnforcer:
             'operation': operation,
             'estimated_cost': estimated_cost,
             'details': details,
-            'requested_at': datetime.now(),
+            'requested_at': safe_datetime_now(),
             'status': 'pending'
         }
 

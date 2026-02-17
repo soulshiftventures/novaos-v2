@@ -26,6 +26,14 @@ from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
+
+def safe_datetime_now() -> datetime:
+    """Get current datetime with fallback for timestamp overflow"""
+    try:
+        return safe_datetime_now()
+    except (OSError, OverflowError, ValueError):
+        return datetime(2025, 1, 1, 0, 0, 0)
+
 try:
     from cryptography.fernet import Fernet
     from cryptography.hazmat.primitives import hashes
@@ -126,7 +134,7 @@ class APIKey:
         """Check if key is valid"""
         if not self.enabled:
             return False
-        if self.expires_at and datetime.now() > self.expires_at:
+        if self.expires_at and safe_datetime_now() > self.expires_at:
             return False
         return True
 
@@ -140,17 +148,17 @@ class Session:
     permissions: Set[Permission]
     created_at: datetime
     expires_at: datetime
-    last_activity: datetime = field(default_factory=datetime.now)
+    last_activity: datetime = field(default_factory=safe_datetime_now)
     ip_address: Optional[str] = None
     user_agent: Optional[str] = None
 
     def is_valid(self) -> bool:
         """Check if session is valid"""
-        return datetime.now() < self.expires_at
+        return safe_datetime_now() < self.expires_at
 
     def refresh(self):
         """Refresh session activity"""
-        self.last_activity = datetime.now()
+        self.last_activity = safe_datetime_now()
 
 
 class EncryptionManager:
@@ -284,7 +292,7 @@ class AccessController:
             # Set expiration
             expires_at = None
             if expires_days:
-                expires_at = datetime.now() + timedelta(days=expires_days)
+                expires_at = safe_datetime_now() + timedelta(days=expires_days)
 
             # Get role permissions
             permissions = ROLE_PERMISSIONS.get(role, set())
@@ -295,7 +303,7 @@ class AccessController:
                 key_hash=key_hash,
                 name=name,
                 role=role,
-                created_at=datetime.now(),
+                created_at=safe_datetime_now(),
                 expires_at=expires_at,
                 ip_whitelist=ip_whitelist,
                 scopes=permissions
@@ -334,7 +342,7 @@ class AccessController:
             new_key_id, new_plaintext_key = self.create_api_key(
                 name=f"{old_key.name} (rotated)",
                 role=old_key.role,
-                expires_days=(old_key.expires_at - datetime.now()).days if old_key.expires_at else None,
+                expires_days=(old_key.expires_at - safe_datetime_now()).days if old_key.expires_at else None,
                 ip_whitelist=old_key.ip_whitelist
             )
 
@@ -427,8 +435,8 @@ class AccessController:
                 key_id=api_key.key_id,
                 role=api_key.role,
                 permissions=api_key.scopes,
-                created_at=datetime.now(),
-                expires_at=datetime.now() + self.session_timeout,
+                created_at=safe_datetime_now(),
+                expires_at=safe_datetime_now() + self.session_timeout,
                 ip_address=ip_address,
                 user_agent=user_agent
             )
@@ -436,7 +444,7 @@ class AccessController:
             self.sessions[session_id] = session
 
             # Update key usage
-            api_key.last_used = datetime.now()
+            api_key.last_used = safe_datetime_now()
             api_key.use_count += 1
 
             self.access_granted += 1

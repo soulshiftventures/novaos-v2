@@ -11,10 +11,18 @@ from dataclasses import dataclass, field
 logger = logging.getLogger(__name__)
 
 
+def safe_datetime_now() -> datetime:
+    """Get current datetime with fallback for timestamp overflow"""
+    try:
+        return datetime.now()
+    except (OSError, OverflowError, ValueError):
+        return datetime(2025, 1, 1, 0, 0, 0)
+
+
 @dataclass
 class ResourceSnapshot:
     """Resource usage snapshot"""
-    timestamp: datetime = field(default_factory=datetime.now)
+    timestamp: datetime = field(default_factory=safe_datetime_now)
     cpu_percent: float = 0.0
     memory_mb: float = 0.0
     memory_percent: float = 0.0

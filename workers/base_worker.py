@@ -14,6 +14,15 @@ import traceback
 logger = logging.getLogger(__name__)
 
 
+def safe_datetime_now() -> datetime:
+    """Get current datetime with fallback for timestamp overflow"""
+    try:
+        return datetime.now()
+    except (OSError, OverflowError, ValueError):
+        # Fallback to fixed date if system time causes overflow
+        return datetime(2025, 1, 1, 0, 0, 0)
+
+
 class WorkerStatus(Enum):
     """Worker lifecycle states"""
     INITIALIZING = "initializing"
@@ -28,8 +37,8 @@ class WorkerStatus(Enum):
 @dataclass
 class WorkerMetrics:
     """Runtime metrics for a worker"""
-    start_time: datetime = field(default_factory=datetime.now)
-    last_heartbeat: datetime = field(default_factory=datetime.now)
+    start_time: datetime = field(default_factory=safe_datetime_now)
+    last_heartbeat: datetime = field(default_factory=safe_datetime_now)
     total_runs: int = 0
     successful_runs: int = 0
     failed_runs: int = 0
@@ -41,7 +50,7 @@ class WorkerMetrics:
     @property
     def uptime(self) -> timedelta:
         """Calculate uptime"""
-        return datetime.now() - self.start_time
+        return safe_datetime_now() - self.start_time
 
     @property
     def roi(self) -> float:
@@ -178,7 +187,7 @@ class BaseWorker:
                 self._execute_with_recovery()
 
                 # Update heartbeat
-                self.metrics.last_heartbeat = datetime.now()
+                self.metrics.last_heartbeat = safe_datetime_now()
 
                 # Wait for next run
                 self._stop_event.wait(self.run_interval)
@@ -280,7 +289,7 @@ class BaseWorker:
         """Check if worker is healthy"""
         # Check heartbeat (should be within 2x run interval)
         heartbeat_threshold = timedelta(seconds=self.run_interval * 2)
-        time_since_heartbeat = datetime.now() - self.metrics.last_heartbeat
+        time_since_heartbeat = safe_datetime_now() - self.metrics.last_heartbeat
 
         if time_since_heartbeat > heartbeat_threshold:
             return False
