@@ -5,10 +5,24 @@ Debug script to identify where timestamp overflow occurs during import
 
 import sys
 import traceback
+import time
+from datetime import datetime
 
 print("=" * 60)
 print("IMPORT DEBUG - Testing each module step by step")
 print("=" * 60)
+
+# Test basic datetime operations first
+print("\n[SYSTEM CHECK] Testing datetime operations...")
+try:
+    print(f"  time.time(): {time.time()}")
+    print(f"  datetime.now(): {datetime.now()}")
+    print(f"  datetime.now().timestamp(): {datetime.now().timestamp()}")
+    print(f"  ✓ Basic datetime operations work")
+except Exception as e:
+    print(f"  ✗ SYSTEM ERROR: {type(e).__name__}: {e}")
+    traceback.print_exc()
+    sys.exit(1)
 
 modules_to_test = [
     ("datetime", "from datetime import datetime"),
