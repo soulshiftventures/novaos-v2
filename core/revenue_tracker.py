@@ -72,7 +72,13 @@ class RevenueTracker:
         Returns:
             Created revenue event
         """
-        event_id = f"rev_{datetime.now().timestamp()}_{len(self.events)}"
+        # Safe timestamp generation
+        try:
+            ts = int(datetime.now().timestamp())
+        except (OSError, OverflowError, ValueError):
+            ts = int(datetime(2025, 1, 1).timestamp())
+
+        event_id = f"rev_{ts}_{len(self.events)}"
 
         event = RevenueEvent(
             event_id=event_id,

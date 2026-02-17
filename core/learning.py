@@ -209,12 +209,17 @@ class NovaLearning:
                 "roi": float(performance.get('roi', agent_dict.get('roi', 0.0)))
             }
 
-            # Store in ChromaDB
+            # Store in ChromaDB with safe timestamp
+            try:
+                ts = int(datetime.now().timestamp())
+            except (OSError, OverflowError, ValueError):
+                ts = int(datetime(2025, 1, 1).timestamp())
+
             self.agents_collection.add(
                 embeddings=[embedding],
                 documents=[searchable_text],
                 metadatas=[metadata],
-                ids=[f"agent_{agent_id}_{datetime.now().timestamp()}"]
+                ids=[f"agent_{agent_id}_{ts}"]
             )
 
             print(f"[Learning] Stored agent deployment {agent_id} in vector database")

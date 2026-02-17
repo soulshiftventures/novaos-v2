@@ -285,8 +285,14 @@ class SecurityMonitor:
 
     def _create_alert_from_event(self, event: SecurityEvent):
         """Create alert from critical event"""
+        # Safe timestamp generation
+        try:
+            ts = int(datetime.now().timestamp())
+        except (OSError, OverflowError, ValueError):
+            ts = int(datetime(2025, 1, 1).timestamp())
+
         alert = Alert(
-            alert_id=f"alert_{int(datetime.now().timestamp())}",
+            alert_id=f"alert_{ts}",
             timestamp=event.timestamp,
             level=event.level,
             title=f"{event.event_type.value.replace('_', ' ').title()}",

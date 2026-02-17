@@ -170,7 +170,7 @@ class BudgetEnforcer:
         self,
         global_daily_limit: float = 100.0,
         global_hourly_limit: float = 20.0,
-        per_agent_daily_limit: float = 10.0,
+        per_agent_daily_limit: float = 50.0,
         per_operation_limit: float = 30.0,
         high_cost_threshold: float = 5.0,  # Requires approval
         emergency_stop_threshold: float = 150.0,  # Emergency stop
@@ -466,7 +466,13 @@ class BudgetEnforcer:
         Returns:
             Approval request ID
         """
-        approval_id = f"approval_{int(time.time())}_{agent_id}"
+        # Safe timestamp for approval ID
+        try:
+            ts = int(time.time())
+        except (OSError, OverflowError, ValueError):
+            ts = 1704067200  # Fixed fallback: 2024-01-01
+
+        approval_id = f"approval_{ts}_{agent_id}"
 
         request = {
             'id': approval_id,
