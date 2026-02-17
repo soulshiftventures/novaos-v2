@@ -62,7 +62,7 @@ services:
     region: oregon
     plan: starter
     buildCommand: "pip install -r requirements-production.txt"
-    startCommand: "python -c 'from revenue_agents import DigitalProductCreator; agent = DigitalProductCreator(worker_id=\"product_ai_ml\", niche=\"AI/ML\", run_interval=1800); agent.start(); import time; time.sleep(float(\"inf\"))'"
+    startCommand: "python -c 'from revenue_agents import DigitalProductCreator; agent = DigitalProductCreator(worker_id=\"product_ai_ml\", niche=\"AI/ML\", run_interval=1800); agent.start(); import time; [time.sleep(3600) for _ in iter(int, 1)]'"
     envVars:
       - key: ANTHROPIC_API_KEY
         sync: false
@@ -81,7 +81,7 @@ services:
     region: oregon
     plan: starter
     buildCommand: "pip install -r requirements-production.txt"
-    startCommand: "python -c 'from revenue_agents import ContentArbitrage; agent = ContentArbitrage(worker_id=\"arbitrage_upwork\", platform=\"upwork\", run_interval=300); agent.start(); import time; time.sleep(float(\"inf\"))'"
+    startCommand: "python -c 'from revenue_agents import ContentArbitrage; agent = ContentArbitrage(worker_id=\"arbitrage_upwork\", platform=\"upwork\", run_interval=300); agent.start(); import time; [time.sleep(3600) for _ in iter(int, 1)]'"
     envVars:
       - key: ANTHROPIC_API_KEY
         sync: false
@@ -98,7 +98,7 @@ services:
     region: oregon
     plan: starter
     buildCommand: "pip install -r requirements-production.txt"
-    startCommand: "python -c 'from revenue_agents import LeadGenerator; agent = LeadGenerator(worker_id=\"leads_saas\", target_industry=\"SaaS\", run_interval=900, leads_per_cycle=25); agent.start(); import time; time.sleep(float(\"inf\"))'"
+    startCommand: "python -c 'from revenue_agents import LeadGenerator; agent = LeadGenerator(worker_id=\"leads_saas\", target_industry=\"SaaS\", run_interval=900, leads_per_cycle=25); agent.start(); import time; [time.sleep(3600) for _ in iter(int, 1)]'"
     envVars:
       - key: ANTHROPIC_API_KEY
         sync: false
