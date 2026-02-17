@@ -34,8 +34,10 @@ try:
     print("SUCCESS! Agent is running without errors")
     print("="*60)
 
-    # Keep running
-    time.sleep(float('inf'))
+    # Keep running (use big number instead of infinity to avoid overflow)
+    while True:
+        time.sleep(3600)  # Sleep 1 hour at a time
+        print(f"[{datetime.now()}] Still alive!")
 
 except Exception as e:
     print(f"\n✗ ERROR at current step:")
