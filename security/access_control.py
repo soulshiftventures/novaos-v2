@@ -37,7 +37,7 @@ def safe_datetime_now() -> datetime:
 try:
     from cryptography.fernet import Fernet
     from cryptography.hazmat.primitives import hashes
-    from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2
+    from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
     CRYPTO_AVAILABLE = True
 except ImportError as e:
     CRYPTO_AVAILABLE = False
@@ -189,7 +189,7 @@ class EncryptionManager:
             )
 
         # Derive encryption key from password
-        kdf = PBKDF2(
+        kdf = PBKDF2HMAC(
             algorithm=hashes.SHA256(),
             length=32,
             salt=b'novaos_v2_salt',  # Should be random and stored
