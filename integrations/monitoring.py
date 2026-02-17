@@ -15,6 +15,16 @@ from config.financial_targets import (
 from config.settings import MAX_AI_COST_PERCENT, ALERT_AI_COST_PERCENT
 
 
+def safe_datetime_now():
+    """Get current datetime with fallback for timestamp overflow"""
+    try:
+        return safe_datetime_now()
+    except (OSError, OverflowError, ValueError):
+        from datetime import datetime as dt
+        return dt(2025, 1, 1, 0, 0, 0)
+
+
+
 class CostMonitor:
     """Real-time AI cost monitoring and optimization"""
 
@@ -50,7 +60,7 @@ class CostMonitor:
         )[:5]
 
         return {
-            "timestamp": datetime.now().isoformat(),
+            "timestamp": safe_datetime_now().isoformat(),
             "period": period,
             "summary": {
                 "total_revenue": total_revenue,
@@ -153,7 +163,7 @@ class CostMonitor:
         """Project costs based on current usage patterns"""
 
         # Get recent costs (last 7 days)
-        week_ago = (datetime.now() - timedelta(days=7)).isoformat()
+        week_ago = (safe_datetime_now() - timedelta(days=7)).isoformat()
         recent_costs = self.memory.get_total_costs(start_date=week_ago)
 
         # Calculate daily average
@@ -211,11 +221,11 @@ class PerformanceMonitor:
 
         # Targets
         month = get_current_month()
-        day = datetime.now().day
+        day = safe_datetime_now().day
         tracking = is_on_track(total_revenue, month, day)
 
         return {
-            "timestamp": datetime.now().isoformat(),
+            "timestamp": safe_datetime_now().isoformat(),
             "system_health": self._calculate_system_health(
                 len(high_performers),
                 len(low_performers),
@@ -329,7 +339,7 @@ class RevenueTracker:
 
         # Get targets
         month = get_current_month()
-        day = datetime.now().day
+        day = safe_datetime_now().day
         tracking = is_on_track(total_revenue, month, day)
         targets = get_current_target()
 
@@ -338,7 +348,7 @@ class RevenueTracker:
         net_profit = total_revenue - total_costs
 
         return {
-            "timestamp": datetime.now().isoformat(),
+            "timestamp": safe_datetime_now().isoformat(),
             "total_revenue": total_revenue,
             "monthly_target": targets['revenue_target'],
             "daily_target": targets['daily_revenue_target'],

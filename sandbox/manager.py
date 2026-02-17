@@ -222,7 +222,7 @@ class SandboxManager:
         cursor.execute("""
             INSERT INTO sandbox_projects (id, name, description, status, created_at, workspace_path)
             VALUES (?, ?, ?, 'active', ?, ?)
-        """, (project_id, name, description, datetime.now().isoformat(), str(workspace_path)))
+        """, (project_id, name, description, safe_datetime_now().isoformat(), str(workspace_path)))
         self.memory.conn.commit()
 
         print(f"✓ Created sandbox project: {name}")
@@ -316,7 +316,7 @@ class SandboxManager:
             INSERT INTO sandbox_experiments (project_id, name, hypothesis, config, started_at)
             VALUES (?, ?, ?, ?, ?)
         """, (project_id, name, hypothesis, json.dumps(config) if config else None,
-              datetime.now().isoformat()))
+              safe_datetime_now().isoformat()))
         self.memory.conn.commit()
 
         experiment_id = cursor.lastrowid
@@ -334,7 +334,7 @@ class SandboxManager:
             UPDATE sandbox_experiments
             SET results = ?, completed_at = ?, success = ?
             WHERE id = ?
-        """, (json.dumps(results), datetime.now().isoformat(), success, experiment_id))
+        """, (json.dumps(results), safe_datetime_now().isoformat(), success, experiment_id))
         self.memory.conn.commit()
 
         print(f"✓ Experiment {experiment_id} completed")
@@ -362,7 +362,7 @@ class SandboxManager:
         basic_evaluation = {
             'project_id': project_id,
             'project_name': project.name,
-            'evaluated_at': datetime.now().isoformat(),
+            'evaluated_at': safe_datetime_now().isoformat(),
             'metrics': metrics,
             'criteria': {}
         }
@@ -475,6 +475,16 @@ class SandboxManager:
 
         # Get production memory
         from core.memory import NovaMemory
+
+
+def safe_datetime_now():
+    """Get current datetime with fallback for timestamp overflow"""
+    try:
+        return safe_datetime_now()
+    except (OSError, OverflowError, ValueError):
+        from datetime import datetime as dt
+        return dt(2025, 1, 1, 0, 0, 0)
+
         prod_memory = NovaMemory(production_memory_path)
 
         # Migrate agents
@@ -532,7 +542,7 @@ class SandboxManager:
             UPDATE sandbox_projects
             SET status = 'promoted', promoted_at = ?
             WHERE id = ?
-        """, (datetime.now().isoformat(), project_id))
+        """, (safe_datetime_now().isoformat(), project_id))
         self.memory.conn.commit()
 
         result = {

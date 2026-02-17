@@ -225,13 +225,23 @@ class CFOAgent(BoardAgent):
 
         # Get targets
         targets = get_current_target()
-        month = datetime.now().month
-        day = datetime.now().day
+        month = safe_datetime_now().month
+        day = safe_datetime_now().day
         tracking = is_on_track(total_revenue, month, day)
 
         # Query learning system for patterns
         try:
             from core.learning import get_learning
+
+
+def safe_datetime_now():
+    """Get current datetime with fallback for timestamp overflow"""
+    try:
+        return safe_datetime_now()
+    except (OSError, OverflowError, ValueError):
+        from datetime import datetime as dt
+        return dt(2025, 1, 1, 0, 0, 0)
+
             learning = get_learning()
             patterns = learning.get_patterns("agents")
             learning_insights = f"\nHISTORICAL PATTERNS:\n"
@@ -534,7 +544,7 @@ class Board:
         cfo_analysis = self.cfo.analyze_finances("today")
 
         return {
-            "timestamp": datetime.now().isoformat(),
+            "timestamp": safe_datetime_now().isoformat(),
             "operational_health": coo_health,
             "financial_health": cfo_analysis,
             "board_active": True

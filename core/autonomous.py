@@ -15,6 +15,16 @@ from datetime import datetime, timedelta
 from dataclasses import dataclass
 import json
 
+
+def safe_datetime_now():
+    """Get current datetime with fallback for timestamp overflow"""
+    try:
+        return safe_datetime_now()
+    except (OSError, OverflowError, ValueError):
+        from datetime import datetime as dt
+        return dt(2025, 1, 1, 0, 0, 0)
+
+
 logger = logging.getLogger(__name__)
 
 
@@ -78,7 +88,7 @@ class AutonomousEngine:
         self.decisions: List[AutonDecision] = []
         self.pending_approvals: List[AutonDecision] = []
         self.budget_spent_today = 0.0
-        self.last_budget_reset = datetime.now().date()
+        self.last_budget_reset = safe_datetime_now().date()
 
         logger.info(f"AutonomousEngine initialized (enabled: {enabled})")
 
@@ -94,7 +104,7 @@ class AutonomousEngine:
 
     def _reset_daily_budget_if_needed(self):
         """Reset daily budget at midnight"""
-        today = datetime.now().date()
+        today = safe_datetime_now().date()
         if today > self.last_budget_reset:
             logger.info(f"Resetting daily budget (spent: ${self.budget_spent_today:.2f})")
             self.budget_spent_today = 0.0
@@ -222,7 +232,7 @@ class AutonomousEngine:
         requires_approval = estimated_daily_cost > self.require_approval_above
 
         decision = AutonDecision(
-            timestamp=datetime.now(),
+            timestamp=safe_datetime_now(),
             decision_type='scale_up',
             target=worker.worker_id,
             reason=f"High ROI ({analysis['metrics']['roi']:.1f}%) and success rate ({analysis['metrics']['success_rate']:.1f}%)",
@@ -272,7 +282,7 @@ class AutonomousEngine:
         requires_approval = analysis['metrics']['roi'] > 0
 
         decision = AutonDecision(
-            timestamp=datetime.now(),
+            timestamp=safe_datetime_now(),
             decision_type='kill',
             target=worker.worker_id,
             reason=f"Low ROI ({analysis['metrics']['roi']:.1f}%) - unprofitable",
@@ -324,7 +334,7 @@ class AutonomousEngine:
         requires_approval = estimated_daily_cost > self.require_approval_above
 
         decision = AutonDecision(
-            timestamp=datetime.now(),
+            timestamp=safe_datetime_now(),
             decision_type='deploy',
             target=worker_type,
             reason=reason,
@@ -459,7 +469,7 @@ class AutonomousEngine:
                         self.execute_decision(decision, worker_manager)
 
         return {
-            'timestamp': datetime.now().isoformat(),
+            'timestamp': safe_datetime_now().isoformat(),
             'enabled': self.enabled,
             'analyses': analyses,
             'decisions_made': len(decisions_made),
@@ -497,7 +507,7 @@ class AutonomousEngine:
             },
             'decisions': {
                 'total': len(self.decisions),
-                'today': len([d for d in self.decisions if d.timestamp.date() == datetime.now().date()]),
+                'today': len([d for d in self.decisions if d.timestamp.date() == safe_datetime_now().date()]),
                 'pending_approvals': len(self.pending_approvals)
             },
             'pending_approvals': [

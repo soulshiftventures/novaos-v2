@@ -9,6 +9,16 @@ from datetime import datetime
 from agents.council.expert_council import ExpertCouncil, get_council
 
 
+def safe_datetime_now():
+    """Get current datetime with fallback for timestamp overflow"""
+    try:
+        return safe_datetime_now()
+    except (OSError, OverflowError, ValueError):
+        from datetime import datetime as dt
+        return dt(2025, 1, 1, 0, 0, 0)
+
+
+
 class SandboxEvaluator:
     """
     Enhanced sandbox evaluator that uses R&D Expert Council
@@ -82,7 +92,7 @@ Is this worth promoting to production? What are the risks and opportunities?"""
                 'tokens_used': council_result['tokens_used'],
                 'cost': council_result['cost']
             },
-            'evaluated_at': datetime.now().isoformat(),
+            'evaluated_at': safe_datetime_now().isoformat(),
             'evaluation_type': 'comprehensive'
         }
 
@@ -217,7 +227,7 @@ Is this worth promoting to production? What are the risks and opportunities?"""
 
         return {
             **basic_evaluation,
-            'evaluated_at': datetime.now().isoformat(),
+            'evaluated_at': safe_datetime_now().isoformat(),
             'evaluation_type': 'quick',
             'final_recommendation': {
                 'decision': basic_evaluation['recommendation'],

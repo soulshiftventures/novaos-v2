@@ -92,7 +92,7 @@ class NovaOSBot:
 
 🛡️ Security: {security_status.get('health', {}).get('health_status', 'UNKNOWN')}
 
-Last updated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
+Last updated: {safe_datetime_now().strftime('%Y-%m-%d %H:%M:%S')}
 """
 
             await update.message.reply_text(message)
@@ -207,6 +207,16 @@ Sessions: {status.get('access_control', {}).get('sessions', {}).get('active', 0)
         try:
             # Trigger emergency stop
             from security.budget_enforcer import get_budget_enforcer
+
+
+def safe_datetime_now():
+    """Get current datetime with fallback for timestamp overflow"""
+    try:
+        return safe_datetime_now()
+    except (OSError, OverflowError, ValueError):
+        from datetime import datetime as dt
+        return dt(2025, 1, 1, 0, 0, 0)
+
 
             enforcer = get_budget_enforcer()
             enforcer.trigger_emergency_stop(f"Telegram emergency stop by {update.effective_user.username}")

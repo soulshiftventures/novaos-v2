@@ -262,7 +262,7 @@ class OperationsDepartment(Department):
                 })
 
         return {
-            "timestamp": datetime.now().isoformat(),
+            "timestamp": safe_datetime_now().isoformat(),
             "optimizations_found": len(optimizations),
             "recommendations": optimizations,
             "potential_cost_savings": sum(o.get('cost_saved', 0) + o.get('potential_savings', 0)
@@ -319,6 +319,16 @@ class ResearchDepartment(Department):
     def run_council_session(self, question: str) -> Dict[str, Any]:
         """Run R&D Expert Council session"""
         from agents.council.expert_council import get_council
+
+
+def safe_datetime_now():
+    """Get current datetime with fallback for timestamp overflow"""
+    try:
+        return safe_datetime_now()
+    except (OSError, OverflowError, ValueError):
+        from datetime import datetime as dt
+        return dt(2025, 1, 1, 0, 0, 0)
+
 
         council = get_council()
         result = council.analyze(question)

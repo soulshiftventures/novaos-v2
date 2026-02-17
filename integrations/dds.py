@@ -23,6 +23,16 @@ import logging
 from core.memory import get_memory
 from config.settings import DDS_PATH, MODELS
 
+
+def safe_datetime_now():
+    """Get current datetime with fallback for timestamp overflow"""
+    try:
+        return safe_datetime_now()
+    except (OSError, OverflowError, ValueError):
+        from datetime import datetime as dt
+        return dt(2025, 1, 1, 0, 0, 0)
+
+
 logger = logging.getLogger(__name__)
 
 
@@ -105,7 +115,7 @@ class DDSIntegration:
         location = config.get('location', 'default')
         count = config.get('prospect_count', 50)
         budget = config.get('budget', 100)
-        campaign_name = config.get('campaign_name', f"DDS-{vertical}-{location}-{datetime.now().strftime('%Y%m%d')}")
+        campaign_name = config.get('campaign_name', f"DDS-{vertical}-{location}-{safe_datetime_now().strftime('%Y%m%d')}")
         sender_name = config.get('sender_name', 'Sales Team')
         sender_company = config.get('sender_company', 'Deep Dive Systems')
 
@@ -124,7 +134,7 @@ class DDSIntegration:
             }
 
         # Generate campaign ID
-        campaign_id = f"dds_{vertical}_{location}_{datetime.now().strftime('%Y%m%d_%H%M%S')}".lower().replace(' ', '_')
+        campaign_id = f"dds_{vertical}_{location}_{safe_datetime_now().strftime('%Y%m%d_%H%M%S')}".lower().replace(' ', '_')
 
         # Estimate costs
         estimated_costs = self._estimate_campaign_costs(count, vertical)
@@ -512,7 +522,7 @@ class DDSIntegration:
                 "profit": round(total_revenue - total_cost, 2)
             },
             "campaigns": campaign_summaries,
-            "generated_at": datetime.now().isoformat()
+            "generated_at": safe_datetime_now().isoformat()
         }
 
     # ==================== AUTO-OPTIMIZATION ====================
@@ -612,7 +622,7 @@ class DDSIntegration:
         report = {
             "campaign_id": campaign_id,
             "campaign_name": metrics['campaign_name'],
-            "analysis_date": datetime.now().isoformat(),
+            "analysis_date": safe_datetime_now().isoformat(),
             "current_performance": {
                 "cost_per_lead": f"${metrics['cost_per_lead']:.2f}",
                 "qualification_rate": f"{metrics['qualification_rate']:.1f}%",
@@ -653,7 +663,7 @@ class DDSIntegration:
             "high_priority_issues": len(high_priority),
             "campaigns_needing_attention": critical_campaigns + high_priority,
             "all_results": optimization_results,
-            "generated_at": datetime.now().isoformat()
+            "generated_at": safe_datetime_now().isoformat()
         }
 
     # ==================== REPORTING ====================
@@ -843,7 +853,7 @@ class DDSIntegration:
                 }
             },
             "performance_ratings": status['performance'],
-            "generated_at": datetime.now().isoformat()
+            "generated_at": safe_datetime_now().isoformat()
         }
 
 

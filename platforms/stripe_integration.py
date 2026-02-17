@@ -38,6 +38,16 @@ class StripeIntegration:
 
         try:
             import stripe
+
+
+def safe_datetime_now():
+    """Get current datetime with fallback for timestamp overflow"""
+    try:
+        return safe_datetime_now()
+    except (OSError, OverflowError, ValueError):
+        from datetime import datetime as dt
+        return dt(2025, 1, 1, 0, 0, 0)
+
             self.stripe = stripe
             stripe.api_key = self.api_key
             logger.info("Stripe integration initialized")
@@ -144,9 +154,9 @@ class StripeIntegration:
             return {'total': 0.0, 'count': 0, 'charges': []}
 
         if not start_date:
-            start_date = datetime.now() - timedelta(days=30)
+            start_date = safe_datetime_now() - timedelta(days=30)
         if not end_date:
-            end_date = datetime.now()
+            end_date = safe_datetime_now()
 
         try:
             charges = self.stripe.Charge.list(
@@ -170,7 +180,7 @@ class StripeIntegration:
                         created_dt = datetime.fromtimestamp(charge.created)
                     except (OSError, OverflowError, ValueError):
                         # Use current time as fallback for invalid timestamps
-                        created_dt = datetime.now()
+                        created_dt = safe_datetime_now()
 
                     charge_list.append({
                         'id': charge.id,

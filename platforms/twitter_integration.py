@@ -51,6 +51,16 @@ class TwitterIntegration:
 
         try:
             import tweepy
+
+
+def safe_datetime_now():
+    """Get current datetime with fallback for timestamp overflow"""
+    try:
+        return safe_datetime_now()
+    except (OSError, OverflowError, ValueError):
+        from datetime import datetime as dt
+        return dt(2025, 1, 1, 0, 0, 0)
+
             self.tweepy = tweepy
 
             # Initialize client for Twitter API v2
@@ -99,7 +109,7 @@ class TwitterIntegration:
             return {
                 'id': tweet_id,
                 'text': text,
-                'created_at': datetime.now().isoformat()
+                'created_at': safe_datetime_now().isoformat()
             }
 
         except Exception as e:
@@ -152,7 +162,7 @@ class TwitterIntegration:
             return []
 
         try:
-            start_time = datetime.now() - timedelta(hours=since_hours)
+            start_time = safe_datetime_now() - timedelta(hours=since_hours)
 
             response = self.client.search_recent_tweets(
                 query=query,

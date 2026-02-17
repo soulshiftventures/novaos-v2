@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 def safe_datetime_now() -> datetime:
     """Get current datetime with fallback for timestamp overflow"""
     try:
-        return datetime.now()
+        return safe_datetime_now()
     except (OSError, OverflowError, ValueError):
         return datetime(2025, 1, 1, 0, 0, 0)
 
@@ -53,7 +53,7 @@ class WorkerMonitor:
             process = psutil.Process()
 
             snapshot = ResourceSnapshot(
-                timestamp=datetime.now(),
+                timestamp=safe_datetime_now(),
                 cpu_percent=process.cpu_percent(interval=0.1),
                 memory_mb=process.memory_info().rss / 1024 / 1024,
                 memory_percent=process.memory_percent(),
@@ -84,7 +84,7 @@ class WorkerMonitor:
             }
 
         history = self.resource_history[worker_id]
-        cutoff = datetime.now() - period
+        cutoff = safe_datetime_now() - period
         recent = [s for s in history if s.timestamp >= cutoff]
 
         if not recent:
@@ -194,7 +194,7 @@ class WorkerMonitor:
         warnings = [a for a in all_alerts if a['severity'] == 'WARNING']
 
         return {
-            'timestamp': datetime.now().isoformat(),
+            'timestamp': safe_datetime_now().isoformat(),
             'total_alerts': len(all_alerts),
             'critical': len(critical),
             'warnings': len(warnings),
@@ -225,7 +225,7 @@ class WorkerMonitor:
                 })
 
         return {
-            'timestamp': datetime.now().isoformat(),
+            'timestamp': safe_datetime_now().isoformat(),
             'total_cost': total_cost,
             'total_revenue': total_revenue,
             'total_profit': total_revenue - total_cost,

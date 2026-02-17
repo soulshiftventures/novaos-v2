@@ -68,7 +68,7 @@ class AgentSpawner:
             }
         ]
 
-        self.start_time = datetime.now()
+        self.start_time = safe_datetime_now()
 
     def should_spawn_batch(self, batch_index: int) -> tuple[bool, str]:
         """
@@ -83,7 +83,7 @@ class AgentSpawner:
         batch = self.spawn_schedule[batch_index]
 
         # Check time delay
-        elapsed_hours = (datetime.now() - self.start_time).total_seconds() / 3600
+        elapsed_hours = (safe_datetime_now() - self.start_time).total_seconds() / 3600
         if elapsed_hours < batch['delay_hours']:
             return False, f"Waiting {batch['delay_hours'] - elapsed_hours:.1f} more hours"
 
@@ -207,6 +207,16 @@ class AgentSpawner:
 
                 elif agent_type == 'LeadGenerator':
                     from revenue_agents import LeadGenerator
+
+
+def safe_datetime_now():
+    """Get current datetime with fallback for timestamp overflow"""
+    try:
+        return safe_datetime_now()
+    except (OSError, OverflowError, ValueError):
+        from datetime import datetime as dt
+        return dt(2025, 1, 1, 0, 0, 0)
+
                     agent = LeadGenerator(
                         worker_id=agent_id,
                         target_industry=agent_config['industry']
@@ -216,7 +226,7 @@ class AgentSpawner:
                     'id': agent_id,
                     'type': agent_type,
                     'agent': agent,
-                    'started_at': datetime.now()
+                    'started_at': safe_datetime_now()
                 })
 
                 logger.info(f"✓ Spawned {agent_id}")
@@ -228,7 +238,7 @@ class AgentSpawner:
         self.spawn_log.append({
             'batch': batch_index + 1,
             'count': len(batch['agents']),
-            'time': datetime.now(),
+            'time': safe_datetime_now(),
             'agents': [a['id'] for a in batch['agents']]
         })
 

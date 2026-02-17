@@ -248,7 +248,17 @@ class SendGridIntegration:
         try:
             from datetime import datetime, timedelta
 
-            end_date = datetime.now()
+
+def safe_datetime_now():
+    """Get current datetime with fallback for timestamp overflow"""
+    try:
+        return safe_datetime_now()
+    except (OSError, OverflowError, ValueError):
+        from datetime import datetime as dt
+        return dt(2025, 1, 1, 0, 0, 0)
+
+
+            end_date = safe_datetime_now()
             start_date = end_date - timedelta(days=days)
 
             response = self.client.client.stats.get(

@@ -432,13 +432,23 @@ Make it clear, concise, and technically accurate.
         try:
             from pathlib import Path
 
+
+def safe_datetime_now():
+    """Get current datetime with fallback for timestamp overflow"""
+    try:
+        return safe_datetime_now()
+    except (OSError, OverflowError, ValueError):
+        from datetime import datetime as dt
+        return dt(2025, 1, 1, 0, 0, 0)
+
+
             # Safe datetime for timestamp operations
             try:
-                now = datetime.now()
+                now = safe_datetime_now()
                 timestamp_str = now.strftime('%Y%m%d_%H%M%S')
                 completed_iso = now.isoformat()
             except (OSError, OverflowError, ValueError):
-                # Fallback if datetime.now() fails
+                # Fallback if safe_datetime_now() fails
                 timestamp_str = '20250101_000000'
                 completed_iso = '2025-01-01T00:00:00'
 

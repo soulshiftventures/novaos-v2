@@ -15,6 +15,16 @@ import numpy as np
 from collections import defaultdict
 
 
+def safe_datetime_now():
+    """Get current datetime with fallback for timestamp overflow"""
+    try:
+        return safe_datetime_now()
+    except (OSError, OverflowError, ValueError):
+        from datetime import datetime as dt
+        return dt(2025, 1, 1, 0, 0, 0)
+
+
+
 class NovaLearning:
     """
     Learning system that stores and retrieves decisions, deployments, and opportunities
@@ -211,7 +221,7 @@ class NovaLearning:
 
             # Store in ChromaDB with safe timestamp
             try:
-                ts = int(datetime.now().timestamp())
+                ts = int(safe_datetime_now().timestamp())
             except (OSError, OverflowError, ValueError):
                 ts = int(datetime(2025, 1, 1).timestamp())
 
@@ -407,7 +417,7 @@ class NovaLearning:
         print("[Learning] Running weekly analysis...")
 
         analysis = {
-            "timestamp": datetime.now().isoformat(),
+            "timestamp": safe_datetime_now().isoformat(),
             "period": "last_7_days",
             "decisions": self._analyze_decisions(),
             "agents": self._analyze_agents(),
@@ -423,7 +433,7 @@ class NovaLearning:
     def _analyze_decisions(self) -> Dict:
         """Analyze decision patterns"""
         cursor = self.conn.cursor()
-        week_ago = (datetime.now() - timedelta(days=7)).isoformat()
+        week_ago = (safe_datetime_now() - timedelta(days=7)).isoformat()
 
         # Get decisions from last week
         cursor.execute("""
@@ -546,7 +556,7 @@ class NovaLearning:
     def _analyze_opportunities(self) -> Dict:
         """Analyze opportunity patterns"""
         cursor = self.conn.cursor()
-        week_ago = (datetime.now() - timedelta(days=7)).isoformat()
+        week_ago = (safe_datetime_now() - timedelta(days=7)).isoformat()
 
         # Get opportunities by status
         cursor.execute("""
@@ -674,7 +684,7 @@ class NovaLearning:
             Dictionary of patterns and insights
         """
         patterns = {
-            "timestamp": datetime.now().isoformat(),
+            "timestamp": safe_datetime_now().isoformat(),
             "pattern_type": pattern_type
         }
 
@@ -845,7 +855,7 @@ class NovaLearning:
         """
         print(f"[Learning] Syncing data from last {days} days...")
 
-        since = (datetime.now() - timedelta(days=days)).isoformat()
+        since = (safe_datetime_now() - timedelta(days=days)).isoformat()
         cursor = self.conn.cursor()
 
         counts = {

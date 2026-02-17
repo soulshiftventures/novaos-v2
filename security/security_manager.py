@@ -190,7 +190,7 @@ class SecurityManager:
 
                 if self.monitor:
                     self.monitor.record_event(SecurityEvent(
-                        timestamp=datetime.now(),
+                        timestamp=safe_datetime_now(),
                         event_type=AnomalyType.SUSPICIOUS_INPUT,
                         level=AlertLevel.WARNING if result.threat_level == ThreatLevel.SUSPICIOUS else AlertLevel.CRITICAL,
                         description=f"Input validation failed: {result.threats_detected}",
@@ -253,7 +253,7 @@ class SecurityManager:
 
                 if self.monitor:
                     self.monitor.record_event(SecurityEvent(
-                        timestamp=datetime.now(),
+                        timestamp=safe_datetime_now(),
                         event_type=AnomalyType.RATE_LIMIT_EXCEEDED,
                         level=AlertLevel.WARNING,
                         description="Rate limit exceeded",
@@ -280,7 +280,7 @@ class SecurityManager:
 
                 if self.monitor:
                     self.monitor.record_event(SecurityEvent(
-                        timestamp=datetime.now(),
+                        timestamp=safe_datetime_now(),
                         event_type=AnomalyType.BUDGET_VIOLATION,
                         level=AlertLevel.CRITICAL if "EMERGENCY" in budget_reason else AlertLevel.WARNING,
                         description=budget_reason,
@@ -423,7 +423,7 @@ class SecurityManager:
         """Get overall security status"""
         status = {
             'security_level': self.security_level.value,
-            'timestamp': datetime.now().isoformat()
+            'timestamp': safe_datetime_now().isoformat()
         }
 
         if self.input_validator:
@@ -547,3 +547,13 @@ def get_security_manager(
 
 
 from datetime import datetime
+
+
+def safe_datetime_now():
+    """Get current datetime with fallback for timestamp overflow"""
+    try:
+        return safe_datetime_now()
+    except (OSError, OverflowError, ValueError):
+        from datetime import datetime as dt
+        return dt(2025, 1, 1, 0, 0, 0)
+

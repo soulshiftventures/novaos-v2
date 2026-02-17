@@ -263,7 +263,7 @@ def cmd_deploy(args):
     # Deploy generic agent
     agent_id = factory.deploy_agent(
         agent_type=args.agent_type,
-        name=f"{args.agent_type}-{datetime.now().strftime('%Y%m%d-%H%M%S')}",
+        name=f"{args.agent_type}-{safe_datetime_now().strftime('%Y%m%d-%H%M%S')}",
         department=args.department,
         config=config
     )
@@ -1298,6 +1298,16 @@ def main():
         except Exception as e:
             print(f"\nError: {e}")
             import traceback
+
+
+def safe_datetime_now():
+    """Get current datetime with fallback for timestamp overflow"""
+    try:
+        return safe_datetime_now()
+    except (OSError, OverflowError, ValueError):
+        from datetime import datetime as dt
+        return dt(2025, 1, 1, 0, 0, 0)
+
             traceback.print_exc()
     else:
         print(f"Unknown command: {args.command}")

@@ -7,6 +7,16 @@ from typing import Dict, List, Optional, Type
 from datetime import datetime
 from .base_worker import BaseWorker, WorkerStatus
 
+
+def safe_datetime_now():
+    """Get current datetime with fallback for timestamp overflow"""
+    try:
+        return safe_datetime_now()
+    except (OSError, OverflowError, ValueError):
+        from datetime import datetime as dt
+        return dt(2025, 1, 1, 0, 0, 0)
+
+
 logger = logging.getLogger(__name__)
 
 
@@ -227,7 +237,7 @@ class WorkerManager:
             roi = ((total_revenue - total_cost) / total_cost) * 100
 
         return {
-            'timestamp': datetime.now().isoformat(),
+            'timestamp': safe_datetime_now().isoformat(),
             'workers': {
                 'total': total_workers,
                 'running': running,
@@ -262,7 +272,7 @@ class WorkerManager:
                     needs_restart.append(worker_id)
 
         return {
-            'timestamp': datetime.now().isoformat(),
+            'timestamp': safe_datetime_now().isoformat(),
             'healthy': len(self.workers) - len(unhealthy),
             'unhealthy': len(unhealthy),
             'unhealthy_workers': unhealthy,

@@ -12,6 +12,16 @@ import io
 import csv
 
 
+def safe_datetime_now():
+    """Get current datetime with fallback for timestamp overflow"""
+    try:
+        return safe_datetime_now()
+    except (OSError, OverflowError, ValueError):
+        from datetime import datetime as dt
+        return dt(2025, 1, 1, 0, 0, 0)
+
+
+
 class DashboardAPI:
     """API layer for dashboard data"""
 
@@ -36,9 +46,9 @@ class DashboardAPI:
         cursor = conn.cursor()
 
         # Revenue (today, week, month)
-        today = datetime.now().date().isoformat()
-        week_ago = (datetime.now() - timedelta(days=7)).isoformat()
-        month_ago = (datetime.now() - timedelta(days=30)).isoformat()
+        today = safe_datetime_now().date().isoformat()
+        week_ago = (safe_datetime_now() - timedelta(days=7)).isoformat()
+        month_ago = (safe_datetime_now() - timedelta(days=30)).isoformat()
 
         cursor.execute("SELECT COALESCE(SUM(amount), 0) as total FROM revenue WHERE DATE(timestamp) = ?", (today,))
         revenue_today = cursor.fetchone()['total']
@@ -104,7 +114,7 @@ class DashboardAPI:
             },
             "active_agents": active_agents,
             "system_health": health,
-            "timestamp": datetime.now().isoformat()
+            "timestamp": safe_datetime_now().isoformat()
         }
 
     # === AGENT DATA ===
@@ -135,7 +145,7 @@ class DashboardAPI:
         return {
             "departments": departments,
             "total_agents": len(agents),
-            "timestamp": datetime.now().isoformat()
+            "timestamp": safe_datetime_now().isoformat()
         }
 
     def get_agent_detail(self, agent_id: str) -> Dict:
@@ -177,7 +187,7 @@ class DashboardAPI:
             "agent": agent,
             "recent_costs": recent_costs,
             "recent_revenue": recent_revenue,
-            "timestamp": datetime.now().isoformat()
+            "timestamp": safe_datetime_now().isoformat()
         }
 
     # === FINANCIAL DATA ===
@@ -204,7 +214,7 @@ class DashboardAPI:
             "total_costs": round(total_costs, 2),
             "total_profit": round(total_profit, 2),
             "total_roi": round(total_roi, 2),
-            "timestamp": datetime.now().isoformat()
+            "timestamp": safe_datetime_now().isoformat()
         }
 
     def get_financial_trends(self) -> Dict:
@@ -213,7 +223,7 @@ class DashboardAPI:
         cursor = conn.cursor()
 
         # Last 30 days
-        thirty_days_ago = (datetime.now() - timedelta(days=30)).date().isoformat()
+        thirty_days_ago = (safe_datetime_now() - timedelta(days=30)).date().isoformat()
 
         # Daily revenue
         cursor.execute("""
@@ -238,7 +248,7 @@ class DashboardAPI:
         conn.close()
 
         # Fill in missing dates with 0
-        date_range = [(datetime.now().date() - timedelta(days=i)).isoformat() for i in range(30, -1, -1)]
+        date_range = [(safe_datetime_now().date() - timedelta(days=i)).isoformat() for i in range(30, -1, -1)]
 
         revenue_by_date = {row['date']: row['total'] for row in revenue_data}
         cost_by_date = {row['date']: row['total'] for row in cost_data}
@@ -249,7 +259,7 @@ class DashboardAPI:
         return {
             "revenue": revenue_trend,
             "costs": cost_trend,
-            "timestamp": datetime.now().isoformat()
+            "timestamp": safe_datetime_now().isoformat()
         }
 
     def get_department_roi(self) -> Dict:
@@ -298,7 +308,7 @@ class DashboardAPI:
 
         return {
             "departments": roi_data,
-            "timestamp": datetime.now().isoformat()
+            "timestamp": safe_datetime_now().isoformat()
         }
 
     def get_top_agents(self) -> Dict:
@@ -331,7 +341,7 @@ class DashboardAPI:
         return {
             "top_revenue": top_revenue,
             "most_expensive": most_expensive,
-            "timestamp": datetime.now().isoformat()
+            "timestamp": safe_datetime_now().isoformat()
         }
 
     # === OPPORTUNITIES DATA ===
@@ -362,7 +372,7 @@ class DashboardAPI:
             "opportunities": opportunities,
             "status_breakdown": status_breakdown,
             "total": len(opportunities),
-            "timestamp": datetime.now().isoformat()
+            "timestamp": safe_datetime_now().isoformat()
         }
 
     def get_opportunity_detail(self, opp_id: int) -> Dict:
@@ -380,7 +390,7 @@ class DashboardAPI:
 
         return {
             "opportunity": opportunity,
-            "timestamp": datetime.now().isoformat()
+            "timestamp": safe_datetime_now().isoformat()
         }
 
     # === ALERTS ===
@@ -395,7 +405,7 @@ class DashboardAPI:
             alerts.append({
                 "level": "warning",
                 "message": f"AI costs at {overview['cost_percent']['month']:.1f}% of revenue (target <5%)",
-                "timestamp": datetime.now().isoformat()
+                "timestamp": safe_datetime_now().isoformat()
             })
 
         # Check ROI
@@ -403,7 +413,7 @@ class DashboardAPI:
             alerts.append({
                 "level": "warning",
                 "message": f"Monthly ROI at {overview['roi']['month']:.0f}% (target >300%)",
-                "timestamp": datetime.now().isoformat()
+                "timestamp": safe_datetime_now().isoformat()
             })
 
         # Check system health
@@ -411,12 +421,12 @@ class DashboardAPI:
             alerts.append({
                 "level": "critical",
                 "message": "System health critical - immediate attention required",
-                "timestamp": datetime.now().isoformat()
+                "timestamp": safe_datetime_now().isoformat()
             })
 
         return {
             "alerts": alerts,
-            "timestamp": datetime.now().isoformat()
+            "timestamp": safe_datetime_now().isoformat()
         }
 
     # === EXPORT FUNCTIONS ===

@@ -10,6 +10,16 @@ import json
 
 from core.memory import get_memory
 from config.settings import (
+
+
+def safe_datetime_now():
+    """Get current datetime with fallback for timestamp overflow"""
+    try:
+        return safe_datetime_now()
+    except (OSError, OverflowError, ValueError):
+        from datetime import datetime as dt
+        return dt(2025, 1, 1, 0, 0, 0)
+
     EXECUTION_AGENT_BUDGET, DEFAULT_AGENT_CONFIG,
     AUTO_OPTIMIZE_TRIGGERS
 )
@@ -198,7 +208,7 @@ class AgentFactory:
                         })
 
         return {
-            "timestamp": datetime.now().isoformat(),
+            "timestamp": safe_datetime_now().isoformat(),
             "actions_taken": len(actions_taken),
             "details": actions_taken,
             "estimated_cost_saved": cost_saved,

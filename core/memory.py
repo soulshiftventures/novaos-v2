@@ -159,7 +159,7 @@ class NovaMemory:
             INSERT INTO decisions (timestamp, agent, decision_type, question,
                                  decision, reasoning, tokens_used, cost)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-        """, (datetime.now().isoformat(), agent, decision_type, question,
+        """, (safe_datetime_now().isoformat(), agent, decision_type, question,
               decision, reasoning, tokens_used, cost))
         self.conn.commit()
         return cursor.lastrowid
@@ -193,7 +193,7 @@ class NovaMemory:
                                   deployed_at, token_budget, config)
                 VALUES (?, ?, ?, ?, 'active', ?, ?, ?)
             """, (agent_id, name, agent_type, department,
-                  datetime.now().isoformat(), token_budget,
+                  safe_datetime_now().isoformat(), token_budget,
                   json.dumps(config) if config else None))
             self.conn.commit()
             return True
@@ -205,7 +205,7 @@ class NovaMemory:
         cursor = self.conn.cursor()
         cursor.execute("""
             UPDATE agents SET status = ?, last_active = ? WHERE id = ?
-        """, (status, datetime.now().isoformat(), agent_id))
+        """, (status, safe_datetime_now().isoformat(), agent_id))
         self.conn.commit()
 
     def update_agent_metrics(self, agent_id: str, tokens_used: int = 0,
@@ -225,7 +225,7 @@ class NovaMemory:
                 last_active = ?
             WHERE id = ?
         """, (tokens_used, cost, revenue, cost, revenue, cost, cost,
-              datetime.now().isoformat(), agent_id))
+              safe_datetime_now().isoformat(), agent_id))
         self.conn.commit()
 
     def get_agent(self, agent_id: str) -> Optional[Dict]:
@@ -264,7 +264,7 @@ class NovaMemory:
                              model, operation, input_tokens, output_tokens,
                              total_tokens, cost, request_data)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        """, (datetime.now().isoformat(), agent_id, agent_name, department,
+        """, (safe_datetime_now().isoformat(), agent_id, agent_name, department,
               model, operation, input_tokens, output_tokens,
               input_tokens + output_tokens, cost,
               json.dumps(request_data) if request_data else None))
@@ -303,13 +303,13 @@ class NovaMemory:
 
         # Determine time filter
         if period == 'today':
-            start_date = datetime.now().date().isoformat()
+            start_date = safe_datetime_now().date().isoformat()
         elif period == 'week':
             from datetime import timedelta
-            start_date = (datetime.now() - timedelta(days=7)).isoformat()
+            start_date = (safe_datetime_now() - timedelta(days=7)).isoformat()
         elif period == 'month':
             from datetime import timedelta
-            start_date = (datetime.now() - timedelta(days=30)).isoformat()
+            start_date = (safe_datetime_now() - timedelta(days=30)).isoformat()
         else:
             start_date = None
 
@@ -340,7 +340,7 @@ class NovaMemory:
             INSERT INTO revenue (timestamp, source, agent_id, department,
                                amount, description)
             VALUES (?, ?, ?, ?, ?, ?)
-        """, (datetime.now().isoformat(), source, agent_id, department,
+        """, (safe_datetime_now().isoformat(), source, agent_id, department,
               amount, description))
         self.conn.commit()
 
@@ -425,7 +425,7 @@ class NovaMemory:
                                      market_size, competitive_analysis, status,
                                      priority, potential_revenue, confidence_score)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        """, (datetime.now().isoformat(), title, description, source,
+        """, (safe_datetime_now().isoformat(), title, description, source,
               market_size, competitive_analysis, status, priority,
               potential_revenue, confidence_score))
         self.conn.commit()
@@ -475,7 +475,7 @@ class NovaMemory:
                                         taleb_analysis, consensus, action_items,
                                         dissents, tokens_used, cost)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        """, (datetime.now().isoformat(), question,
+        """, (safe_datetime_now().isoformat(), question,
               analyses.get('thiel'), analyses.get('musk'),
               analyses.get('graham'), analyses.get('taleb'),
               consensus, json.dumps(action_items),
@@ -501,7 +501,7 @@ class NovaMemory:
         cursor.execute("""
             INSERT INTO system_metrics (timestamp, metric_name, metric_value, metadata)
             VALUES (?, ?, ?, ?)
-        """, (datetime.now().isoformat(), metric_name, metric_value,
+        """, (safe_datetime_now().isoformat(), metric_name, metric_value,
               json.dumps(metadata) if metadata else None))
         self.conn.commit()
 
@@ -509,8 +509,18 @@ class NovaMemory:
         """Get system metrics"""
         from datetime import timedelta
 
+
+def safe_datetime_now():
+    """Get current datetime with fallback for timestamp overflow"""
+    try:
+        return safe_datetime_now()
+    except (OSError, OverflowError, ValueError):
+        from datetime import datetime as dt
+        return dt(2025, 1, 1, 0, 0, 0)
+
+
         cursor = self.conn.cursor()
-        since = (datetime.now() - timedelta(hours=hours)).isoformat()
+        since = (safe_datetime_now() - timedelta(hours=hours)).isoformat()
 
         if metric_name:
             cursor.execute("""

@@ -8,6 +8,16 @@ import requests
 from typing import Dict, List, Optional
 from datetime import datetime, timedelta
 
+
+def safe_datetime_now():
+    """Get current datetime with fallback for timestamp overflow"""
+    try:
+        return safe_datetime_now()
+    except (OSError, OverflowError, ValueError):
+        from datetime import datetime as dt
+        return dt(2025, 1, 1, 0, 0, 0)
+
+
 logger = logging.getLogger(__name__)
 
 
@@ -151,7 +161,7 @@ class GumroadIntegration:
         Returns:
             Revenue summary
         """
-        end_date = datetime.now()
+        end_date = safe_datetime_now()
         start_date = end_date - timedelta(days=days)
 
         after = start_date.strftime('%Y-%m-%d')

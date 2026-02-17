@@ -5,6 +5,16 @@ NovaOS V2 Financial Targets
 
 from datetime import datetime, timedelta
 
+
+def safe_datetime_now():
+    """Get current datetime with fallback for timestamp overflow"""
+    try:
+        return safe_datetime_now()
+    except (OSError, OverflowError, ValueError):
+        from datetime import datetime as dt
+        return dt(2025, 1, 1, 0, 0, 0)
+
+
 # === REVENUE TARGETS (10X AGGRESSIVE) ===
 
 MONTHLY_TARGETS = {
@@ -168,7 +178,7 @@ def get_current_month() -> int:
     """Get current month number (1-12) since NovaOS start"""
     # TODO: Set actual start date
     # For now, return current calendar month
-    return datetime.now().month
+    return safe_datetime_now().month
 
 
 def get_current_target() -> dict:

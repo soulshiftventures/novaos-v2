@@ -10,6 +10,16 @@ from datetime import datetime, timedelta
 from dataclasses import dataclass, field
 import json
 
+
+def safe_datetime_now():
+    """Get current datetime with fallback for timestamp overflow"""
+    try:
+        return safe_datetime_now()
+    except (OSError, OverflowError, ValueError):
+        from datetime import datetime as dt
+        return dt(2025, 1, 1, 0, 0, 0)
+
+
 logger = logging.getLogger(__name__)
 
 
@@ -74,7 +84,7 @@ class RevenueTracker:
         """
         # Safe timestamp generation
         try:
-            ts = int(datetime.now().timestamp())
+            ts = int(safe_datetime_now().timestamp())
         except (OSError, OverflowError, ValueError):
             ts = int(datetime(2025, 1, 1).timestamp())
 
@@ -82,7 +92,7 @@ class RevenueTracker:
 
         event = RevenueEvent(
             event_id=event_id,
-            timestamp=datetime.now(),
+            timestamp=safe_datetime_now(),
             amount=amount,
             source=source,
             agent_id=agent_id,
@@ -217,7 +227,7 @@ class RevenueTracker:
         Returns:
             Cash flow summary
         """
-        cutoff = datetime.now() - period
+        cutoff = safe_datetime_now() - period
         recent_events = [e for e in self.events if e.timestamp >= cutoff]
 
         # Group by day
@@ -293,7 +303,7 @@ class RevenueTracker:
         Returns:
             Hourly revenue data
         """
-        cutoff = datetime.now() - timedelta(hours=hours)
+        cutoff = safe_datetime_now() - timedelta(hours=hours)
         recent_events = [e for e in self.events if e.timestamp >= cutoff]
 
         # Group by hour
@@ -319,7 +329,7 @@ class RevenueTracker:
             filepath: Path to output file
         """
         data = {
-            'exported_at': datetime.now().isoformat(),
+            'exported_at': safe_datetime_now().isoformat(),
             'total_revenue': self.total_revenue,
             'total_costs': self.total_costs,
             'total_profit': self.total_revenue - self.total_costs,
@@ -352,7 +362,7 @@ class RevenueTracker:
         cash_flow = self.get_cash_flow(timedelta(days=30))
 
         return {
-            'timestamp': datetime.now().isoformat(),
+            'timestamp': safe_datetime_now().isoformat(),
             'totals': {
                 'revenue': self.total_revenue,
                 'costs': self.total_costs,
