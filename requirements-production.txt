@@ -13,8 +13,8 @@ anthropic==0.39.0
 chromadb==0.4.22
 
 # Vector Store & Embeddings
-sentence-transformers==2.2.2
-torch==2.1.2
+sentence-transformers==3.3.1
+torch==2.5.1
 
 # Telegram Bot
 python-telegram-bot==20.7
