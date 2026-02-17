@@ -11,7 +11,7 @@ Comprehensive security protections for autonomous AI agents:
 - Behavioral guardrails
 """
 
-from .security_manager import SecurityManager, get_security_manager
+from .security_manager import SecurityManager, SecurityLevel, get_security_manager
 from .input_validator import InputValidator
 from .budget_enforcer import BudgetEnforcer
 from .access_control import AccessController
@@ -21,6 +21,7 @@ from .audit import AuditLogger
 
 __all__ = [
     'SecurityManager',
+    'SecurityLevel',
     'get_security_manager',
     'InputValidator',
     'BudgetEnforcer',
