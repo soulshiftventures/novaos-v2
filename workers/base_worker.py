@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 def safe_datetime_now() -> datetime:
     """Get current datetime with fallback for timestamp overflow"""
     try:
-        return safe_datetime_now()
+        return datetime.now()
     except (OSError, OverflowError, ValueError):
         # Fallback to fixed date if system time causes overflow
         return datetime(2025, 1, 1, 0, 0, 0)

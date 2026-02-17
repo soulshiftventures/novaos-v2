@@ -212,7 +212,7 @@ Sessions: {status.get('access_control', {}).get('sessions', {}).get('active', 0)
 def safe_datetime_now():
     """Get current datetime with fallback for timestamp overflow"""
     try:
-        return safe_datetime_now()
+        return datetime.now()
     except (OSError, OverflowError, ValueError):
         from datetime import datetime as dt
         return dt(2025, 1, 1, 0, 0, 0)
